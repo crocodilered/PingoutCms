@@ -1,5 +1,4 @@
 import cherrypy
-import json
 from webapp.pingout.server import Server
 from webapp.pingout.point import Point
 from datetime import datetime
@@ -33,6 +32,7 @@ class PingoutCmsProxy(object):
                cherrypy.session['user_id'] if "user_id" in cherrypy.session else None
 
     @cherrypy.expose
+    @cherrypy.tools.json_out()
     def signout(self):
         token, user_id = self._get_identity()
         if token and user_id:
@@ -45,16 +45,18 @@ class PingoutCmsProxy(object):
         else:
             #  он блять и не залогинен нигде
             r = {"code": -1}
-        return json.dumps(r).encode("utf8")
+        return r
 
     @cherrypy.expose
+    @cherrypy.tools.json_out()
     def getcode(self, phone):
         server = self._get_server()
         response = server.action('send_otp', args={"phone_number": phone})
         r = {"code": response["code"]}
-        return json.dumps(r).encode("utf8")
+        return r
 
     @cherrypy.expose
+    @cherrypy.tools.json_out()
     def testcode(self, phone, code):
         server = self._get_server()
         response = server.action('validate_otp', args={
@@ -67,9 +69,10 @@ class PingoutCmsProxy(object):
         r = {"code": response["code"]}
         if response["code"] == 0:
             self._get_identity(response["token"], response["user_id"])
-        return json.dumps(r).encode("utf8")
+        return r
 
     @cherrypy.expose(['list-pings'])
+    @cherrypy.tools.json_out()
     def list_pings(self):
         token, user_id = self._get_identity()
         r = {"code": 0}
@@ -101,9 +104,10 @@ class PingoutCmsProxy(object):
                 r["code"] = response["code"]
         else:
             r["code"] = -1
-        return json.dumps(r).encode("utf8")
+        return r
 
     @cherrypy.expose(['delete-ping'])
+    @cherrypy.tools.json_out()
     def delete_ping(self, ping_id, ping_type):
         """
         Удалить пинг
@@ -117,9 +121,10 @@ class PingoutCmsProxy(object):
             r["code"] = response["code"]
         else:
             r["code"] = -1
-        return json.dumps(r).encode("utf8")
+        return r
 
     @cherrypy.expose(["update-ping"])
+    @cherrypy.tools.json_out()
     def update_ping(self, ping_id, ping_type, ping_title, ping_description, ping_datetime, ping_color, ping_tags,
                     ping_file_data):
         """
@@ -153,9 +158,10 @@ class PingoutCmsProxy(object):
                 r["code"] = -2
         else:
             r["code"] = -1
-        return json.dumps(r).encode("utf8")
+        return r
 
     @cherrypy.expose(["create-ping"])
+    @cherrypy.tools.json_out()
     def create_ping(self, ping_lon, ping_lat, ping_title, ping_description, ping_datetime, ping_color, ping_tags,
                     ping_file_data):
         """
@@ -201,7 +207,7 @@ class PingoutCmsProxy(object):
                 r["code"] = -2
         else:
             r["code"] = -2
-        return json.dumps(r).encode("utf8")
+        return r
 
     def get_file_name(self, ping_file_data):
         r = None
