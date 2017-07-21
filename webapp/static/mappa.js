@@ -167,7 +167,7 @@ $(document).ready(function() {
 		el.setAttribute('data-ping-id', ping.id );
 		el.innerHTML = '<span>' + ping.title + '</span>';
 		el.setAttribute('class', 'ping-type-' + ping.type );
-		r = new mapboxgl.Marker(el, {offset:[-6, -6]})
+		r = new mapboxgl.Marker(el, {offset:[-3, -3]})
 			.setLngLat([ping.lng, ping.lat])
 			.addTo(MAP);
 		$('#map .mapboxgl-canvas-container .mapboxgl-marker').click(openModal);

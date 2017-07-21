@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css?family=Oswald');
+
 * { margin:0; padding:0; border-collapse:collapse; }
 
 body {
@@ -42,21 +44,25 @@ body {
 .mapboxgl-marker {
     background-color: #fc0;
     background-size: cover;
-    width: 12px;
-    height: 12px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     cursor: pointer;
     opacity:.7;
 }
 
+.mapboxgl-marker:hover { opacity: 1; }
+
 .mapboxgl-marker span {
 	color: #fc0;
     position: relative;
-    font-size: 12px;
-    top: -4px;
-    left: 10px;
+    font-size: 14px;
+    font-weight:200;
+    top: -9px;
+    left: 6px;
     white-space: nowrap;
     padding: 5px;
+    font-family: 'Oswald', sans-serif;
 }
 
 /* auth */
