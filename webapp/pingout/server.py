@@ -11,17 +11,6 @@ from urllib3 import PoolManager
 __all__ = ['Server']
 
 
-SERVER_PORT_SOCKET = 8091
-SERVER_PORT_HTTPS = 443
-SERVER_HOST = '82.146.41.247'
-SERVER_CERT = '../cert/cert_dev.dat'
-
-# server_host = '188.120.251.22'  # server
-# server_cert = '/var/radar/cert/cert.dat'
-# server_host = '82.146.41.18'  # master
-# server_cert = '/var/radar/cert/cert_master.dat'
-
-
 class Server:
 
     def __init__(self, server_host, server_port, server_https_port, server_cert):
@@ -78,7 +67,7 @@ class Server:
         data = [cmd]
         if cmd not in ['send_otp', 'validate_otp']:
             data += [token]
-        print(data + [args])
+        # print(data + [args])
         resp = self._write_socket(data + [args])
         return resp
 
@@ -103,20 +92,3 @@ class Tls12HttpAdapter(HTTPAdapter):
     def init_poolmanager(self, connections, maxsize, block=False):
         self.poolmanager = PoolManager(num_pools=connections, maxsize=maxsize, block=block,
                                        ssl_version=ssl.PROTOCOL_TLSv1_2, assert_hostname=False)
-
-
-if __name__ == "__main__":
-    sess = Server(SERVER_HOST, SERVER_PORT, SERVER_HTTPS_PORT, SERVER_CERT)
-
-    # send_otp = sess.action('send_otp', args={'phone_number': '+79163140864'})
-    validate_otp = sess.action('validate_otp', args={
-        'phone_number': '+79163140864',
-        'one_time_password': 4499, #  send_otp['one_time_password'],
-        'install_id': "webapp",
-        'os_id': 0,
-        'device_name': "webapp"
-    })
-    token = validate_otp['token']
-    user_id = int(validate_otp['user_id'])
-
-    print('Server is alive (%s - %s).' % (user_id, token) if user_id else 'server is dead.')
