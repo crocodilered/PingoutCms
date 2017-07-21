@@ -42,7 +42,7 @@ body {
 .mapboxgl-popup-content { padding: 10px 23px 10px!important; }
 
 .mapboxgl-marker {
-    background-color: #fc0;
+    background-color: #f70;
     background-size: cover;
     width: 6px;
     height: 6px;
