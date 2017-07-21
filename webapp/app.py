@@ -8,10 +8,7 @@ class PingoutCmsApp(object):
     @cherrypy.expose
     @cherrypy.tools.render(template='index.html')
     def index(self):
-        return {
-            'shooters': None,
-            'path': 'shooters'
-        }
+        return None
 
     @cherrypy.expose
     @cherrypy.tools.render(template='mappa.html')
