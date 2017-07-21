@@ -1,0 +1,31 @@
+[global]
+server.socket_host = '0.0.0.0'
+server.socket_port = 8080
+
+[/]
+tools.sessions.on = True
+tools.sessions.storage_class = cherrypy.lib.sessions.FileSession
+tools.sessions.storage_path = "sessions"
+tools.render.on = True
+tools.gzip.on = True
+tools.encode.on = False
+tools.caching.on: False
+
+[/proxy]
+tools.render.on = False
+tools.response_headers.on = True
+tools.response_headers.headers = [('Content-Type', 'text/json')]
+
+[/favicon.ico]
+tools.render.on = False
+
+[/static]
+tools.staticdir.on = True
+tools.staticdir.dir = 'webapp/static'
+tools.render.on = False
+
+[PingOut]
+server.host = '82.146.41.247'
+server.port_socket = 8091
+server.port_https = 443
+server.cert = 'cert/cert_dev.dat'

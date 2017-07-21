@@ -1,0 +1,83 @@
+<%inherit file="_base.html"/>
+
+<%block name="head">
+	<script src='https://api.mapbox.com/mapbox-gl-js/v0.38.0/mapbox-gl.js'></script>
+	<link href='https://api.mapbox.com/mapbox-gl-js/v0.38.0/mapbox-gl.css' rel='stylesheet' />
+	<script src="/static/mappa.js"></script>
+
+
+	<link href="/static/bootstrap-colorpickersliders/dist/bootstrap.colorpickersliders.min.css" rel="stylesheet" type="text/css" media="all">
+	<script src="//cdnjs.cloudflare.com/ajax/libs/tinycolor/0.11.1/tinycolor.min.js"></script>
+	<script src="/static/bootstrap-colorpickersliders/dist/bootstrap.colorpickersliders.min.js"></script>
+</%block>
+
+<%block name="main">
+
+	% if not token:
+		Для работы с картой вам необходимо <a href="/">авторизоваться</a>.
+    	<% return STOP_RENDERING %>
+	% endif
+
+	<div id="toolbar">
+		<button id="button-logout" type="button" class="btn btn-default btn-sm" aria-label="Logout">
+  			<span class="glyphicon glyphicon-log-out" aria-hidden="true"></span>
+		</button>
+	</div>
+
+	<div id="map"></div>
+
+	<div id="modal" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog">
+		<div class="modal-dialog modal-lg" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title">asd</h4>
+				</div>
+				<div class="modal-body">
+					<form>
+						<input type="hidden" id="modal-input-id">
+						<input type="hidden" id="modal-input-type">
+						<input type="hidden" id="modal-input-lon">
+						<input type="hidden" id="modal-input-lat">
+						<div class="form-group">
+							<label for="modal-input-title">Заголовок</label>
+							<input type="text" class="form-control" id="modal-input-title" autofocus>
+						</div>
+						<div id="form-group-datetime" class="form-group">
+							<label for="modal-input-datetime">Дата и время события</label>
+							<input type="text" class="form-control" id="modal-input-datetime" style="width:200px" placeholder="dd.mm.yyyy hh:mm">
+						</div>
+						<div class="form-group">
+							<label for="modal-input-description">Текст</label>
+							<textarea class="form-control" id="modal-input-description" rows="10"></textarea>
+						</div>
+						<div id="form-group-file" class="form-group">
+							<label for="modal-input-file">Фотография</label>
+							<input type="file" id="modal-input-file" accept="image/jpg">
+							<img src="https://82.146.41.247/a09ba2c32e9fa4b0956c2f6aad48b8501d0f4761748d1d62a6501d6ada64b64c" style="width:100px; display:none; margin-top:10px;">
+						</div>
+						<div id="form-group-color" class="form-group">
+							<label>Цвет</label>
+							<input type="hidden" id="modal-input-color">
+						</div>
+						<div class="form-group">
+							<label for="modal-input-tags">Теги</label>
+							<input type="text" class="form-control" id="modal-input-tags" placeholder="">
+						</div>
+					</form>
+				</div>
+				<div class="modal-footer">
+					<button id="modal-button-update" type="button" class="btn btn-primary" style="float:left">
+						<span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+						Сохранить
+					</button>
+					<button id="modal-button-delete" type="button" class="btn btn-link btn-sm">
+						<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+						Удалить
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</%block>
