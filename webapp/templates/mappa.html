@@ -13,11 +13,6 @@
 
 <%block name="main">
 
-	% if not token:
-		Для работы с картой вам необходимо <a href="/">авторизоваться</a>.
-    	<% return STOP_RENDERING %>
-	% endif
-
 	<div id="toolbar">
 		<button id="button-logout" type="button" class="btn btn-default btn-sm" aria-label="Logout">
   			<span class="glyphicon glyphicon-log-out" aria-hidden="true"></span>
@@ -54,7 +49,7 @@
 						<div id="form-group-file" class="form-group">
 							<label for="modal-input-file">Фотография</label>
 							<input type="file" id="modal-input-file" accept="image/jpg">
-							<img src="https://82.146.41.247/a09ba2c32e9fa4b0956c2f6aad48b8501d0f4761748d1d62a6501d6ada64b64c" style="width:100px; display:none; margin-top:10px;">
+							<img src="" style="width:100px; display:none; margin-top:10px;">
 						</div>
 						<div id="form-group-color" class="form-group">
 							<label>Цвет</label>
