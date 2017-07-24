@@ -53,13 +53,13 @@ $(document).ready(function() {
 			openModal(e);
 		});
 
-	$('#input-tags').keyup(function(e){
-		// todo:разобраться
-		return false; // разберемся...
+	$('#modal-input-tags').keyup(function(e){
 		var tags = $(this).val()
-		tags = tags.replace(/[#,.]/g, '');
+
+		tags = tags.replace(/#/g, ' ').trim();
 		tags = tags.replace(/  +/g, ' ');
 		tags = tags.replace(/\s/g, ' #');
+		if( e.keyCode == 32 ) tags = tags + ' #'
 		$(this).val('#' + tags)
 	});
 
@@ -157,7 +157,7 @@ $(document).ready(function() {
 		var el = document.createElement('div'), r;
 		el.id = ping.type + '-' + ping.id;
 		el.setAttribute('data-ping-id', ping.id );
-		el.innerHTML = '<span>' + ping.title + '</span>';
+		el.innerHTML = '<span>' + (ping.title ? ping.title : 'NO CØMMENT') + '</span>';
 		el.setAttribute('class', 'ping-type-' + ping.type );
 		r = new mapboxgl.Marker(el, {offset:[-3, -3]})
 			.setLngLat([ping.lng, ping.lat])
@@ -178,7 +178,8 @@ $(document).ready(function() {
 			e.stopPropagation();
 		}
 
-		$('#modal form input').val('');
+		$('#modal form input').val(null);
+		$('#modal form textarea').val(null);
 
 		var ping = lookupPingInCache($(this).data('ping-id'), $(this).hasClass('ping-type-post') ? 'post' : 'event');
 		if( ping ) {
