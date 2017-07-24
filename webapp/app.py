@@ -11,9 +11,15 @@ class PingoutCmsApp(object):
         return None
 
     @cherrypy.expose
+    @cherrypy.tools.render(template='error.html')
+    def error(self, code):
+        return {"code": code}
+
+    @cherrypy.expose
     @cherrypy.tools.render(template='mappa.html')
+    @cherrypy.tools.authentication()
     def mappa(self):
         return {
-            'token': cherrypy.session['token'] if 'token' in cherrypy.session else None,
-            'user_id': cherrypy.session['user_id'] if 'user_id' in cherrypy.session else None
+            "token": cherrypy.session.get("token", None),
+            "user_id": cherrypy.session.get("user_id", None)
         }

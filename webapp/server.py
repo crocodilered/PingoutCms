@@ -1,5 +1,6 @@
 import os.path
 import cherrypy
+from webapp.libs.tools.authenticationtool import AuthenticationTool
 from webapp.libs.tools.makotool import MakoTool
 from webapp.libs.plugins.makoplugin import MakoTemplatePlugin
 
@@ -10,6 +11,8 @@ conf_dir = os.path.join(cur_dir, 'conf')
 conf_path = os.path.join(cur_dir, 'conf', 'server.conf')
 
 cherrypy.tools.render = MakoTool()
+
+cherrypy.tools.authentication = AuthenticationTool()
 
 from webapp.app import PingoutCmsApp
 from webapp.proxy import PingoutCmsProxy
