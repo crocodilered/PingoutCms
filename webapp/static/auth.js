@@ -21,7 +21,17 @@ $(document).ready(function() {
 					.addClass('glyphicon-refresh glyphicon-refresh-animate');
 
 			$.getJSON('/proxy/get-code', {phone:phone})
-				.done(function(data){
+				.done(function(data) {
+					if( data.code != 0 ) {
+						alert("Ошибка!\nСервер вернул код " + data.code + ".");
+						inputEl.parent('.input-group').removeClass('has-success');
+						buttonEl
+							.attr('disabled', null)
+							.find('.glyphicon')
+								.removeClass('glyphicon-refresh glyphicon-refresh-animate')
+								.addClass('glyphicon-arrow-right');
+						return false;
+					}
 					buttonEl
 						.removeClass('btn-primary')
 						.addClass('btn-success')
