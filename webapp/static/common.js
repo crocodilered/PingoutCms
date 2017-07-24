@@ -2,7 +2,6 @@
 
 $(document).ready(function() {
 
-}
 	$('#button-signout').click(function(e){
 		$.getJSON('/proxy/sign-out')
 			.done(function(data){
@@ -10,4 +9,4 @@ $(document).ready(function() {
 			});
 	});
 
-}
+});
