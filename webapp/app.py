@@ -6,7 +6,7 @@ __all__ = ['PingoutCmsApp']
 
 class PingoutCmsApp(object):
     @cherrypy.expose
-    @cherrypy.tools.render(template='index.html')
+    @cherrypy.tools.render(template='auth.html')
     def index(self):
         return None
 
