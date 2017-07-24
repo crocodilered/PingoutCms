@@ -1,0 +1,11 @@
+<%inherit file="_base.html"/>
+
+<%block name="main">
+	<div class="container alert alert-danger" role="alert" style="max-width:500px; margin-top:5%;">
+		<div class="text-danger" style="text-align:center; font-size:22px;">
+			% if code == "1":
+			<b>Ошибка!</b> Для работы с картой необходимо <a href="/" class="alert-link">авторизоваться</a>.
+			% endif
+		</div>
+    </div>
+</%block>
