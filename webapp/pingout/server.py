@@ -6,6 +6,7 @@ import crcmod.predefined
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3 import PoolManager
+import logging
 
 
 __all__ = ["Server"]
@@ -14,6 +15,8 @@ __all__ = ["Server"]
 class Server:
 
     def __init__(self, server_host, server_port, server_https_port, server_cert):
+
+        self._logger = logging.getLogger('PingoutServer')
 
         self._server_host = server_host
         self._server_port = server_port
@@ -68,8 +71,10 @@ class Server:
         if cmd not in ["send_otp", "validate_otp"]:
             data += [token]
         # print(data + [args])
-        resp = self._write_socket(data + [args])
-        return resp
+        response = self._write_socket(data + [args])
+        self._logger.warning("PINGOUT_SERVER response has non-zero error code! Command: %s, args: %s, response: %s" %
+                             (cmd, args, response))
+        return response
 
     def upload_file(self, token, file_data):
         session = requests.Session()
