@@ -23,13 +23,16 @@ class PingoutCmsProxy(object):
         return self._server
 
     @staticmethod
-    def _get_identity(token=None, user_id=None):
+    def _get_identity():
+        return cherrypy.session['token'] if 'token' in cherrypy.session else None, \
+               cherrypy.session['user_id'] if "user_id" in cherrypy.session else None
+
+    @staticmethod
+    def _set_identity(token=None, user_id=None):
         if token:
             cherrypy.session['token'] = token
         if user_id:
             cherrypy.session['user_id'] = user_id
-        return cherrypy.session['token'] if 'token' in cherrypy.session else None, \
-               cherrypy.session['user_id'] if "user_id" in cherrypy.session else None
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
@@ -68,7 +71,7 @@ class PingoutCmsProxy(object):
         })
         r = {"code": response["code"]}
         if response["code"] == 0:
-            self._get_identity(response["token"], response["user_id"])
+            self._set_identity(response["token"], response["user_id"])
         return r
 
     @cherrypy.expose(['list-pings'])
