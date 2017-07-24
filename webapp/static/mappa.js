@@ -5,8 +5,6 @@ $(document).ready(function() {
 	mapboxgl.accessToken = 'pk.eyJ1Ijoic2VyZ2V6b2xvdHVraGluIiwiYSI6ImNqNHRtYzF1ZjA2dncyd3FtcXRwajA0NWwifQ.dSvjI3CO2qXbR1qzSdv0HQ';
 
 	var MODAL_COLOR_SWATCHES = ['#ffffff', '#5bc44c', '#3cc29f', '#1cb9d4', '#247dd0', '#7248c4', '#f071ba', '#c54141', '#fba735', '#e9ca2a', '#5e6a6b', '#b9c9ca'],
-		// TODO: IMG_SERVER должен инициилизироваться сервером, а не моими руками.
-		IMG_SERVER = 'https://82.146.41.247/',
 		PINGS = [];
 
 	var MAP = new mapboxgl.Map({
@@ -193,7 +191,7 @@ $(document).ready(function() {
 			ping.post_id ? $('#form-group-datetime').hide() : $('#form-group-datetime').show();
 			$('#modal-input-datetime').val( ping.fire_ts_str );
 			if( ping.file_name ) {
-				$('#form-group-file img').attr('src', IMG_SERVER + ping.file_name);
+				$('#form-group-file img').attr('src', ping.file_name);
 				$('#form-group-file img').show();
 			}
 			else {

@@ -218,17 +218,19 @@ class PingoutCmsProxy(object):
                 r = ping_file_name
             return r
 
-    @staticmethod
-    def append_extra(l):
-        for i in l:
+    def append_extra(self, pings):
+        for ping in pings:
             # добавим гео-координаты
-            if "x" in i and "y" in i:
-                p = Point(i['x'], i['y'])
-                i['lng'], i['lat'] = p.get_location()
+            if "x" in ping and "y" in ping:
+                p = Point(ping['x'], ping['y'])
+                ping['lng'], ping['lat'] = p.get_location()
             # Добавим timestamp
-            if "fire_ts" in i:
-                i['fire_ts_str'] = PingoutCmsProxy.timestamp_to_str(i['fire_ts'])
-        return l
+            if "fire_ts" in ping:
+                ping['fire_ts_str'] = PingoutCmsProxy.timestamp_to_str(ping['fire_ts'])
+            # Добавим адрес сервера к file_name
+            if "file_name" in ping:
+                ping["file_name"] = self._get_server().get_file_url(ping["file_name"])
+        return pings
 
     @staticmethod
     def str_to_timestamp(str):
