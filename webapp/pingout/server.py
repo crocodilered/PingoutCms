@@ -72,8 +72,9 @@ class Server:
             data += [token]
         # print(data + [args])
         response = self._write_socket(data + [args])
-        self._logger.warning("PINGOUT_SERVER response has non-zero error code! Command: %s, args: %s, response: %s" %
-                             (cmd, args, response))
+        if response["code"] != 0:
+            self._logger.warning("PINGOUT_SERVER response has non-zero error code! Cmd: %s, args: %s, response: %s"
+                                 % (cmd, args, response))
         return response
 
     def upload_file(self, token, file_data):
