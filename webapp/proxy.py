@@ -22,17 +22,12 @@ class PingoutCmsProxy(object):
                                   app.config['PingOut']['server.cert'])
         return self._server
 
-    @staticmethod
-    def _get_identity():
-        return cherrypy.session['token'] if 'token' in cherrypy.session else None, \
-               cherrypy.session['user_id'] if "user_id" in cherrypy.session else None
+    def _get_identity(self):
+        return cherrypy.session.get("token", None), cherrypy.session.get("user_id", None)
 
-    @staticmethod
-    def _set_identity(token=None, user_id=None):
-        if token:
-            cherrypy.session['token'] = token
-        if user_id:
-            cherrypy.session['user_id'] = user_id
+    def _set_identity(self, token=None, user_id=None):
+        cherrypy.session['token'] = token
+        cherrypy.session['user_id'] = user_id
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
