@@ -20,7 +20,7 @@ $(document).ready(function() {
 					.removeClass('glyphicon-arrow-right')
 					.addClass('glyphicon-refresh glyphicon-refresh-animate');
 
-			$.getJSON('/proxy/getcode', {phone:phone})
+			$.getJSON('/proxy/get-code', {phone:phone})
 				.done(function(data){
 					buttonEl
 						.removeClass('btn-primary')
@@ -45,7 +45,7 @@ $(document).ready(function() {
 		}
 	});
 
-	$('#button-testcode').click(function(e) {
+	$('#button-signin').click(function(e) {
 		e.preventDefault();
 
 		var inputEl = $('#input-code'),
@@ -55,7 +55,7 @@ $(document).ready(function() {
 			inputEl.parent('.input-group')
 				.removeClass('has-error');
 
-			$.getJSON('/proxy/testcode', {
+			$.getJSON('/proxy/sign-in', {
 				phone: extractPhone($('#input-phone').val()),
 				code: inputEl.val()
 			})
@@ -69,10 +69,10 @@ $(document).ready(function() {
 				});
 		}
 		else {
-			setInputState('#input-code', '#button-testcode', false)
+			setInputState('#input-code', '#button-signin', false)
 			inputEl.keyup(function(e){
 				var inputEl = $('#input-code');
-				setInputState('#input-code', '#button-testcode', inputEl.val());
+				setInputState('#input-code', '#button-signin', inputEl.val());
 			});
 			return false;
 		}
