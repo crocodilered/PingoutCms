@@ -19,5 +19,5 @@ cherrypy.tree.mount(app, '/', conf_path)
 
 MakoTemplatePlugin(cherrypy.engine, template_dir, template_cache_dir).subscribe()
 
-if os.environ['PINGOUTCMS_DEBUG'] == '1':
+if __name__ == "__main__":
     cherrypy.engine.start()
