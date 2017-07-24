@@ -29,33 +29,17 @@ class PingoutCmsProxy(object):
         cherrypy.session['token'] = token
         cherrypy.session['user_id'] = user_id
 
-    @cherrypy.expose
+    @cherrypy.expose(["get-code"])
     @cherrypy.tools.json_out()
-    def signout(self):
-        token, user_id = self._get_identity()
-        if token and user_id:
-            server = self._get_server()
-            response = server.action('sign_out', token)
-            if response["code"] == 0:
-                cherrypy.session['token'] = None
-                cherrypy.session['user_id'] = None
-            r = {"code": response["code"]}
-        else:
-            #  он блять и не залогинен нигде
-            r = {"code": -1}
-        return r
-
-    @cherrypy.expose
-    @cherrypy.tools.json_out()
-    def getcode(self, phone):
+    def get_code(self, phone):
         server = self._get_server()
-        response = server.action('send_otp', args={"phone_number": phone})
+        response = server.action("send_otp", args={"phone_number": phone})
         r = {"code": response["code"]}
         return r
 
-    @cherrypy.expose
+    @cherrypy.expose(["sign-in"])
     @cherrypy.tools.json_out()
-    def testcode(self, phone, code):
+    def sign_in(self, phone, code):
         server = self._get_server()
         response = server.action('validate_otp', args={
             'phone_number': phone,
@@ -67,6 +51,22 @@ class PingoutCmsProxy(object):
         r = {"code": response["code"]}
         if response["code"] == 0:
             self._set_identity(response["token"], response["user_id"])
+        return r
+
+    @cherrypy.expose(["sign-out"])
+    @cherrypy.tools.json_out()
+    def sign_out(self):
+        token, user_id = self._get_identity()
+        if token and user_id:
+            server = self._get_server()
+            response = server.action('sign_out', token)
+            if response["code"] == 0:
+                cherrypy.session['token'] = None
+                cherrypy.session['user_id'] = None
+            r = {"code": response["code"]}
+        else:
+            #  он блять и не залогинен нигде
+            r = {"code": -1}
         return r
 
     @cherrypy.expose(['list-pings'])
