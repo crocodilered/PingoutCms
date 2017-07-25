@@ -106,3 +106,4 @@ cert
 sessions
 webapp/conf/server.conf
 webapp/static/bootstrap-colorpickersliders
+webapp/static/bootstrap-datetimepicker

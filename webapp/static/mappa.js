@@ -48,10 +48,7 @@ $(document).ready(function() {
 
 			});
 		})
-		.on('click', function (e) {
-			// создать новый пинг
-			openModal(e);
-		});
+		.on('click', openModal);
 
 	$('#modal-input-tags').keyup(function(e){
 		var tags = $(this).val()
@@ -130,8 +127,30 @@ $(document).ready(function() {
 		return null;
 	}
 
+	function setModalDatetime(visible) {
+		if( visible ) {
+			$('#form-group-datetime').show();
+			$('#modal-input-datetime').datetimepicker({
+				locale: 'ru'
+			});
+		}
+		else {
+			$('#form-group-datetime').hide();
+		}
+	}
+
+	function setModalFile(filename) {
+		if( filename ) {
+			$('#form-group-file img').attr('src', filename);
+			$('#form-group-file img').show();
+		}
+		else {
+			$('#form-group-file img').hide();
+		}
+	}
+
 	function setModalColor(colorNum) {
-		if( !colorNum || colorNum < 0 && colorNum >= MODAL_COLOR_SWATCHES.length ) colorNum = 0;
+		if( !colorNum || (colorNum < 0 && colorNum >= MODAL_COLOR_SWATCHES.length) ) colorNum = 0;
 		$('#modal-wrapper-color').remove();
 		$('#form-group-color').append('<span id="modal-wrapper-color"></span>');
 		$('#modal-input-color').val(colorNum);
@@ -147,17 +166,10 @@ $(document).ready(function() {
 	}
 
 	function createMarker(ping) {
-		/* ping {
-			id,
-			type,
-			title,
-			lng,
-			lat
-		} */
 		var el = document.createElement('div'), r;
 		el.id = ping.type + '-' + ping.id;
 		el.setAttribute('data-ping-id', ping.id );
-		el.innerHTML = '<span>' + (ping.title ? ping.title : 'NO CØMMENT') + '</span>';
+		el.innerHTML = '<span>' + (ping.title ? ping.title : '_без заголовка') + '</span>';
 		el.setAttribute('class', 'ping-type-' + ping.type );
 		r = new mapboxgl.Marker(el, {offset:[-3, -3]})
 			.setLngLat([ping.lng, ping.lat])
@@ -189,23 +201,17 @@ $(document).ready(function() {
 			$('#modal-input-title').val( ping.title );
 			$('#modal-input-description').val( ping.description );
 			$('#modal-input-tags').val( ping.tags );
-			ping.post_id ? $('#form-group-datetime').hide() : $('#form-group-datetime').show();
 			$('#modal-input-datetime').val( ping.fire_ts_str );
-			if( ping.file_name ) {
-				$('#form-group-file img').attr('src', ping.file_name);
-				$('#form-group-file img').show();
-			}
-			else {
-				$('#form-group-file img').hide();
-			}
+			setModalFile(ping.file_name);
 			setModalColor(ping.color);
+			setModalDatetime( ping.type == 'event' );
 		}
 		else {
 			$('.modal-dialog .modal-title').html('Создать пинг');
-			$('#form-group-datetime').show();
 			$('#modal-input-lon').val(e.lngLat.lng);
 			$('#modal-input-lat').val(e.lngLat.lat);
 			setModalColor();
+			setModalDatetime(true);
 		}
 
 		$('#modal').modal();
