@@ -23,14 +23,14 @@ class MakoTool(cherrypy.Tool):
 
         # retrieve the data returned by the handler
         data = cherrypy.response.body or {}
-        template = cherrypy.engine.publish("lookup-template", template).pop()
-
-        if template and isinstance(data, dict):
-            # dump the template using the dictionary
-            if debug:
-                try:
+        if template:
+            template = cherrypy.engine.publish("lookup-template", template).pop()
+            if template and isinstance(data, dict):
+                # dump the template using the dictionary
+                if debug:
+                    try:
+                        cherrypy.response.body = template.render(**data)
+                    except:
+                        cherrypy.response.body = exceptions.html_error_template().render()
+                else:
                     cherrypy.response.body = template.render(**data)
-                except:
-                    cherrypy.response.body = exceptions.html_error_template().render()
-            else:
-                cherrypy.response.body = template.render(**data)
