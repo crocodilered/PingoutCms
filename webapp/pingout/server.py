@@ -94,7 +94,7 @@ class Server:
         return file_name
 
     def get_file_url(self, filename):
-        return "https://%s:%s/%s" % (self._server_host, self._server_https_port, filename)
+        return "http://%s/%s" % (self._server_host, filename)
 
 class Tls12HttpAdapter(HTTPAdapter):
     def init_poolmanager(self, connections, maxsize, block=False):
