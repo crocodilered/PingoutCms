@@ -13,6 +13,16 @@ __all__ = ["Server"]
 
 
 class Server:
+    """
+    Реализуется связь с сервером Pingout.
+    Иван говорит, что нужно делать для каждого Pingout-пользователя отдельное соединение,
+    Потому:
+    """
+
+    # TODO: вынести все HTTP-дела, связанные с upload_file, в отдельный класс
+
+    # TODO: Класс Server убить, вместо него реализовать класс Connection со свойством token
+    # Объекты Connection складывать в какой-нть менеджер. Публиковать в bus событие 'get-connection', к примеру.
 
     def __init__(self, server_host, server_port, server_https_port, server_cert):
 
@@ -23,20 +33,18 @@ class Server:
         self._server_https_port = server_https_port
         self._server_cert = server_cert
 
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.connection = ssl.wrap_socket(self.socket,
-                                          ssl_version=ssl.PROTOCOL_TLSv1_2,
-                                          ca_certs=self._server_cert,
-                                          cert_reqs=ssl.CERT_REQUIRED)
-        self.connection.connect((self._server_host, self._server_port))
+        self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._connection = ssl.wrap_socket(self._socket, ssl_version=ssl.PROTOCOL_TLSv1_2, ca_certs=self._server_cert,
+                                           cert_reqs=ssl.CERT_REQUIRED)
+        self._connection.connect((self._server_host, self._server_port))
 
     def _read_socket(self):
-        packet_header = self.connection.recv(8)
-        request_header = self.connection.recv(5)
+        packet_header = self._connection.recv(8)
+        request_header = self._connection.recv(5)
         body_size, crc, type, code = struct.unpack("<LLBL", packet_header + request_header)
         r = b""
         while len(r) < body_size:
-            chunk = self.connection.recv(body_size - len(r))
+            chunk = self._connection.recv(body_size - len(r))
             if chunk == "":
                 break
             r += chunk
@@ -51,7 +59,7 @@ class Server:
             packet_header = struct.pack("<LL",
                                         len(data_json),
                                         crcmod.predefined.mkCrcFun("crc-32c")(request_header + data_json))
-            self.connection.sendall(packet_header + request_header + data_json)
+            self._connection.sendall(packet_header + request_header + data_json)
             while True:
                 code, r = self._read_socket()
                 if code == 0:
