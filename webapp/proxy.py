@@ -11,15 +11,13 @@ __all__ = ['PingoutCmsProxy']
 class PingoutCmsProxy(object):
 
     def __init__(self):
-        self._server = None
+        app = cherrypy.tree.apps['']
+        self._server = Server(app.config['PingOut']['server.host'],
+                              app.config['PingOut']['server.port_socket'],
+                              app.config['PingOut']['server.port_https'],
+                              app.config['PingOut']['server.cert'])
 
     def _get_server(self):
-        if not self._server:
-            app = cherrypy.tree.apps['']
-            self._server = Server(app.config['PingOut']['server.host'],
-                                  app.config['PingOut']['server.port_socket'],
-                                  app.config['PingOut']['server.port_https'],
-                                  app.config['PingOut']['server.cert'])
         return self._server
 
     def _get_identity(self):
