@@ -1,0 +1,6 @@
+[submodule "webapp\\static\\bootstrap-colorpickersliders"]
+	path = webapp\\static\\bootstrap-colorpickersliders
+	url = https://github.com/istvan-ujjmeszaros/bootstrap-colorpickersliders.git
+[submodule "webapp/static/bootstrap-datetimepicker"]
+	path = webapp/static/bootstrap-datetimepicker
+	url = https://github.com/Eonasdan/bootstrap-datetimepicker.git
