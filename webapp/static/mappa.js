@@ -24,10 +24,12 @@ $(document).ready(function() {
 			}
 		})
 		.on('load', function () {
-			// TODO: Локализовать. Необходимо понять каким слоям какаие поля модифицировать
-			MAP.setLayoutProperty('country-label-lg', 'text-field', '{name_ru}');
-			MAP.setLayoutProperty('place-city-lg-n', 'text-field', '{name_ru}');
-			MAP.setLayoutProperty('place-city-sm', 'text-field', '{name_ru}');
+
+			var layers = MAP.getStyle().layers;
+			for( var i=0; i<layers.length; i++ ) {
+				if( MAP.getLayoutProperty(layers[i].id, 'text-field') )
+					MAP.setLayoutProperty(layers[i].id, 'text-field', '{name_ru}');
+			}
 
 			// загрузить и отобразить пинги
 			$.getJSON('/proxy/list-pings').done(function(data){
@@ -130,9 +132,7 @@ $(document).ready(function() {
 	function setModalDatetime(visible) {
 		if( visible ) {
 			$('#form-group-datetime').show();
-			$('#modal-input-datetime').datetimepicker({
-				locale: 'ru'
-			});
+			$('#modal-input-datetime').datetimepicker({locale: 'ru'});
 		}
 		else {
 			$('#form-group-datetime').hide();
