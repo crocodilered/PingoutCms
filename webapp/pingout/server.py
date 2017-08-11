@@ -22,7 +22,7 @@ class Server:
     # TODO: вынести все HTTP-дела, связанные с upload_file, в отдельный класс
 
     # TODO: Класс Server убить, вместо него реализовать класс Connection со свойством token
-    # Объекты Connection складывать в какой-нть менеджер. Публиковать в bus событие 'get-connection', к примеру.
+    #       Объекты Connection складывать в какой-нть менеджер. Публиковать в bus событие 'get-connection', к примеру.
 
     def __init__(self, server_host, server_port, server_https_port, server_cert):
 
@@ -32,11 +32,13 @@ class Server:
         self._server_port = server_port
         self._server_https_port = server_https_port
         self._server_cert = server_cert
+        self._connection = self._connect()
 
-        self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self._connection = ssl.wrap_socket(self._socket, ssl_version=ssl.PROTOCOL_TLSv1_2, ca_certs=self._server_cert,
-                                           cert_reqs=ssl.CERT_REQUIRED)
-        self._connection.connect((self._server_host, self._server_port))
+    def _connect(self):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        conn = ssl.wrap_socket(sock, ssl_version=ssl.PROTOCOL_TLSv1_2, ca_certs=self._server_cert, cert_reqs=ssl.CERT_REQUIRED)
+        conn.connect((self._server_host, self._server_port))
+        return conn
 
     def _read_socket(self):
         packet_header = self._connection.recv(8)
@@ -53,24 +55,29 @@ class Server:
         return code, json.loads(r.decode("utf-8"))
 
     def _write_socket(self, data):
-        try:
-            data_json = json.dumps(data).encode("utf-8")
-            request_header = struct.pack("<BL", 1, 2)
-            packet_header = struct.pack("<LL",
-                                        len(data_json),
-                                        crcmod.predefined.mkCrcFun("crc-32c")(request_header + data_json))
-            self._connection.sendall(packet_header + request_header + data_json)
-            while True:
-                code, r = self._read_socket()
-                if code == 0:
-                    pass  # got_server_msg
-                elif code == 2:
-                    return r
-                else:
-                    raise RuntimeError()
-        except:
-            raise
-            pass
+
+        data_json = json.dumps(data).encode("utf-8")
+        request_header = struct.pack("<BL", 1, 2)
+        packet_header = struct.pack("<LL",
+                                    len(data_json),
+                                    crcmod.predefined.mkCrcFun("crc-32c")(request_header + data_json))
+
+        while True:
+            try:
+                self._connection.sendall(packet_header + request_header + data_json)
+                break
+            except socket.error:
+                self._logger.error("Socket closed, trying to reconnect.")
+                self._connection = self._connect()
+
+        while True:
+            code, r = self._read_socket()
+            if code == 0:
+                pass  # got_server_msg
+            elif code == 2:
+                return r
+            else:
+                raise RuntimeError()
 
     #  PUBLIC  #########################################################################################################
 
@@ -81,7 +88,7 @@ class Server:
         # print(data + [args])
         response = self._write_socket(data + [args])
         if response["code"] != 0:
-            self._logger.warning("PINGOUT_SERVER response has non-zero error code! Cmd: %s, args: %s, response: %s"
+            self._logger.warning("Pingout server response has non-zero error code! Cmd: %s, args: %s, response: %s"
                                  % (cmd, args, response))
         return response
 
