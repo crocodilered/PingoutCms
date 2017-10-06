@@ -93,20 +93,27 @@ class Server:
         return response
 
     def upload_file(self, token, file_data):
+        """
+        Загружает файл на сервер, возвращает новое имя файла, выданное сервером
+        :param token: токен для соединения
+        :param file_data: файл
+        :return:
+        """
+        r = None
         session = requests.Session()
         session.mount("https://", Tls12HttpAdapter())
-        file_name = None
-        files = {
-            "file": ("file", file_data, "image/jpeg"),
-            "json": ("file", json.dumps(["upload", token]), "application/json")
-        }
-        r = session.post("https://%s:%s/" % (self._server_host, self._server_https_port),
-                         files=files, verify=self._server_cert)
-        if r.status_code == 200:
-            response = json.loads(r.text)
-            if response["code"] == 0:
-                file_name = response["file_name"]
-        return file_name
+        response = session.post(
+            "https://%s:%s/api?action=upload&token=%s" % (self._server_host, self._server_https_port, token),
+            headers={"Content-Type": "image/jpeg"},
+            data=file_data,
+            verify=self._server_cert
+        )
+        self._logger.debug(response)
+        if response.status_code == 200:
+            response_json = json.loads(response.text)
+            if response_json["code"] == 0:
+                r = response_json["file_name"]
+        return r
 
     def get_file_url(self, filename):
         return "http://%s/%s" % (self._server_host, filename)

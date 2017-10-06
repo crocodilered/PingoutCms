@@ -1,8 +1,7 @@
 import cherrypy
+from binascii import a2b_base64
 from webapp.pingout.server import Server
 from webapp.pingout.point import Point
-from datetime import datetime
-from binascii import a2b_base64
 
 
 __all__ = ['PingoutCmsProxy']
@@ -144,7 +143,8 @@ class PingoutCmsProxy(object):
                 }
 
                 if ping_file_data:
-                    args["file_name"] = r["file_name"] = self.get_file_name(ping_file_data)
+                    args["file_name"] = self.get_file_name(ping_file_data)
+                    r["file_name"] = self._get_server().get_file_url(args["file_name"])
 
                 if ping_type == 'event':
                     args["fire_ts"] = int(ping_timestamp)
@@ -183,7 +183,8 @@ class PingoutCmsProxy(object):
             }
 
             if ping_file_data:
-                args["file_name"] = r["file_name"] = self.get_file_name(ping_file_data)
+                args["file_name"] = self.get_file_name(ping_file_data)
+                r["file_name"] = self._get_server().get_file_url(args["file_name"])
 
             ping_type = "post"
 
