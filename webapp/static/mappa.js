@@ -7,6 +7,8 @@ $(document).ready(function() {
 	var MODAL_COLOR_SWATCHES = ['#ffffff', '#5bc44c', '#3cc29f', '#1cb9d4', '#247dd0', '#7248c4', '#f071ba', '#c54141', '#fba735', '#e9ca2a', '#5e6a6b', '#b9c9ca'],
 		PINGS = [];
 
+	$('#modal-input-datetime').datetimepicker({locale: 'ru'});
+
 	var MAP = new mapboxgl.Map({
 		container: 'map',
 		style: 'mapbox://styles/mapbox/dark-v9',
@@ -54,7 +56,6 @@ $(document).ready(function() {
 
 	$('#modal-input-tags').keyup(function(e){
 		var tags = $(this).val()
-
 		tags = tags.replace(/#/g, ' ').trim();
 		tags = tags.replace(/  +/g, ' ');
 		tags = tags.replace(/\s/g, ' #');
@@ -84,22 +85,21 @@ $(document).ready(function() {
 			var reader = new FileReader();
 			reader.readAsDataURL(file);
 		}
+
 		if( pingId ) {
 			// пинг есть, нужно просто сохранить
 			if( file ) {
 				reader.onload = function(e) {
 					updatePing(
 						pingId, pingType, $("#modal-input-title").val(), $("#modal-input-description").val(),
-						$("#modal-input-datetime").val(), $("#modal-input-color").val(), $("#modal-input-tags").val(),
-						e.target.result
+						dtPickerVal(), $("#modal-input-color").val(), $("#modal-input-tags").val(), e.target.result
 					);
         		}
     		}
     		else {
 				updatePing(
 					pingId, pingType, $("#modal-input-title").val(), $("#modal-input-description").val(),
-					$("#modal-input-datetime").val(), $("#modal-input-color").val(), $("#modal-input-tags").val(),
-					null
+					dtPickerVal(), $("#modal-input-color").val(), $("#modal-input-tags").val(), null
 				);
     		}
 		} else {
@@ -108,16 +108,14 @@ $(document).ready(function() {
 				reader.onload = function(e) {
 					createPing(
 						$("#modal-input-lon").val(), $("#modal-input-lat").val(), $("#modal-input-title").val(),
-						$("#modal-input-description").val(), $("#modal-input-datetime").val(), $("#modal-input-color").val(),
-						$("#modal-input-tags").val(), e.target.result
+						$("#modal-input-description").val(), dtPickerVal(), $("#modal-input-color").val(), $("#modal-input-tags").val(), e.target.result
 					);
         		}
     		}
     		else {
 				createPing(
 					$("#modal-input-lon").val(), $("#modal-input-lat").val(), $("#modal-input-title").val(),
-					$("#modal-input-description").val(), $("#modal-input-datetime").val(), $("#modal-input-color").val(),
-					$("#modal-input-tags").val(), null
+					$("#modal-input-description").val(), dtPickerVal(), $("#modal-input-color").val(), $("#modal-input-tags").val(), null
 				);
     		}
 		}
@@ -132,7 +130,6 @@ $(document).ready(function() {
 	function setModalDatetime(visible) {
 		if( visible ) {
 			$('#form-group-datetime').show();
-			$('#modal-input-datetime').datetimepicker({locale: 'ru'});
 		}
 		else {
 			$('#form-group-datetime').hide();
@@ -201,7 +198,7 @@ $(document).ready(function() {
 			$('#modal-input-title').val( ping.title );
 			$('#modal-input-description').val( ping.description );
 			$('#modal-input-tags').val( ping.tags );
-			$('#modal-input-datetime').val( ping.fire_ts_str );
+			dtPickerVal(ping.fire_ts);
 			setModalFile(ping.file_name);
 			setModalColor(ping.color);
 			setModalDatetime( ping.type == 'event' );
@@ -224,7 +221,7 @@ $(document).ready(function() {
 			"ping_lat": lat,
 			"ping_title": title,
 			"ping_description": description,
-			"ping_datetime": dt,
+			'ping_timestamp': dt,
 			"ping_color": color,
 			"ping_tags": tags,
 			'ping_file_data': file_data
@@ -239,7 +236,7 @@ $(document).ready(function() {
 					'description': $("#modal-input-description").val(),
 					'color': $("#modal-input-color").val(),
 					'tags': $("#modal-input-tags").val(),
-					'fire_ts_str': $("#modal-input-datetime").val()
+					'fire_ts': dtPickerVal()
 				});
 				createMarker(PINGS[PINGS.length-1]);
 				$('#modal').modal('hide');
@@ -258,7 +255,7 @@ $(document).ready(function() {
 			'ping_type': type,
 			'ping_title': title,
 			'ping_description': description,
-			'ping_datetime': dt,
+			'ping_timestamp': dt,
 			'ping_color': color,
 			'ping_tags': tags,
 			'ping_file_data': file_data
@@ -274,7 +271,7 @@ $(document).ready(function() {
 					ping.description = $("#modal-input-description").val();
 					ping.color = $("#modal-input-color").val();
 					ping.tags = $("#modal-input-tags").val();
-					ping.fire_ts_str = $("#modal-input-datetime").val();
+					ping.fire_ts = dtPickerVal();
 					ping.file_name = data.file_name
 					// Обновить маркер
 					$( '#' + type + '-' + id + ' span').html( $("#modal-input-title").val() );
@@ -301,6 +298,17 @@ $(document).ready(function() {
 					alert("Ошибка на сервере, код: " + data.code);
 				}
 			});
+	}
+
+	function dtPickerVal(ts) {
+		if( ts ) {
+			console.log(ts);
+			$('#modal-input-datetime').data('DateTimePicker').date(moment(ts*1000)); // coz of millisecs
+		}
+		else {
+			var dt = $('#modal-input-datetime').data('DateTimePicker').date();
+			return dt ? dt.utc().unix() : null
+		}
 	}
 
 });

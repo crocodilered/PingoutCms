@@ -123,7 +123,7 @@ class PingoutCmsProxy(object):
 
     @cherrypy.expose(["update-ping"])
     @cherrypy.tools.json_out()
-    def update_ping(self, ping_id, ping_type, ping_title, ping_description, ping_datetime, ping_color, ping_tags,
+    def update_ping(self, ping_id, ping_type, ping_title, ping_description, ping_timestamp, ping_color, ping_tags,
                     ping_file_data):
         """
         Обновить пинг
@@ -147,7 +147,7 @@ class PingoutCmsProxy(object):
                     args["file_name"] = r["file_name"] = self.get_file_name(ping_file_data)
 
                 if ping_type == 'event':
-                    args["fire_ts"] = self.str_to_timestamp(ping_datetime)
+                    args["fire_ts"] = int(ping_timestamp)
                     args["event_type"] = 1  # установил от балды
                 response = server.action("update_%s" % ping_type, token, args)
 
@@ -160,7 +160,7 @@ class PingoutCmsProxy(object):
 
     @cherrypy.expose(["create-ping"])
     @cherrypy.tools.json_out()
-    def create_ping(self, ping_lon, ping_lat, ping_title, ping_description, ping_datetime, ping_color, ping_tags,
+    def create_ping(self, ping_lon, ping_lat, ping_title, ping_description, ping_timestamp, ping_color, ping_tags,
                     ping_file_data):
         """
         Создать пинг
@@ -187,9 +187,9 @@ class PingoutCmsProxy(object):
 
             ping_type = "post"
 
-            if ping_datetime:
+            if ping_timestamp:
                 ping_type = "event"
-                args["fire_ts"] = self.str_to_timestamp(ping_datetime)
+                args["fire_ts"] = int(ping_timestamp)
                 args["event_type"] = 1  # установил от балды
 
             if ping_type and ping_lon and ping_lat:
@@ -224,24 +224,7 @@ class PingoutCmsProxy(object):
             if "x" in ping and "y" in ping:
                 p = Point(ping['x'], ping['y'])
                 ping['lng'], ping['lat'] = p.get_location()
-            # Добавим timestamp
-            if "fire_ts" in ping:
-                ping['fire_ts_str'] = PingoutCmsProxy.timestamp_to_str(ping['fire_ts'])
             # Добавим адрес сервера к file_name
             if "file_name" in ping:
                 ping["file_name"] = self._get_server().get_file_url(ping["file_name"])
         return pings
-
-    @staticmethod
-    def str_to_timestamp(str):
-        # str has format: dd.mm.yyyy hh:ii
-        if len(str) != 16:
-            raise ValueError
-        dt = datetime(int(str[6:10]), int(str[3:5]), int(str[0:2]), int(str[11:13]), int(str[14:16]))
-        return int(dt.timestamp())
-
-    @staticmethod
-    def timestamp_to_str(timestamp):
-        # str has format: dd.mm.yyyy hh:ii
-        dt = datetime.fromtimestamp(timestamp)
-        return dt.strftime("%d.%m.%Y %H:%M")
