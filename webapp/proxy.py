@@ -250,5 +250,5 @@ class PingoutCmsProxy(object):
                 ping["lng"], ping["lat"] = p.get_location()
             # Добавим адрес сервера к file_name
             if "file" in ping and "file_name" in ping["file"]:
-                ping["file"]["file_name"] = self._get_server().get_file_url(ping["file"]["file_name"])
+                ping["file"]["file_name"] = self._get_server().get_file_url(ping["file"]["file_name"], 120)
         return pings
