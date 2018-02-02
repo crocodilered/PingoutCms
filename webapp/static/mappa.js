@@ -17,7 +17,7 @@ $(document).ready(function() {
 	})
 		.addControl(new mapboxgl.GeolocateControl(), 'bottom-right')
 		.addControl(new mapboxgl.NavigationControl(), 'bottom-right')
-		.on('zoomend', function(){
+		.on('zoomend', function() {
 			if( MAP.getZoom() > 16 ) {
 				if( MAP.getStyle().name != 'Satellite' ) MAP.setStyle('mapbox://styles/mapbox/satellite-v9');
 			}
@@ -35,19 +35,9 @@ $(document).ready(function() {
 
 			// загрузить и отобразить пинги
 			$.getJSON('/proxy/list-pings').done(function(data){
+				console.log(data);
 				if( data.code != 0 ) return false;
-				// трансформировать данные
-				var i;
-				for( i in data.posts ) {
-					data.posts[i].id = data.posts[i].post_id;
-					data.posts[i].type = 'post';
-					PINGS.push(data.posts[i]);
-				}
-				for( i in data.events ) {
-					data.events[i].id = data.events[i].event_id;
-					data.events[i].type = 'event';
-					PINGS.push(data.events[i]);
-				}
+				PINGS = data.pings;
 				for( i in PINGS ) createMarker(PINGS[i]);
 
 			});
@@ -66,7 +56,7 @@ $(document).ready(function() {
 	// Удаление пинга
 	$('#modal-button-delete').click(function(e){
 		if( !confirm("Речь об удалении пинга. Вы уверены?") ) return false;
-		deletePing($('#modal-input-id').val(), $('#modal-input-type').val());
+		deletePing($('#modal-input-id').val());
 	});
 
 	$('#modal').on('shown.bs.modal', function () {
@@ -78,7 +68,6 @@ $(document).ready(function() {
 		$('#modal-button-update span').addClass('glyphicon-refresh glyphicon-refresh-animate');
 
 		var pingId = $('#modal-input-id').val(),
-			pingType = $('#modal-input-type').val(),
 			file = document.getElementById('modal-input-file').files[0];
 		if( file ) {
 			// одно на всех действие, вынесем наверх
@@ -91,15 +80,24 @@ $(document).ready(function() {
 			if( file ) {
 				reader.onload = function(e) {
 					updatePing(
-						pingId, pingType, $("#modal-input-title").val(), $("#modal-input-description").val(),
-						dtPickerVal(), $("#modal-input-color").val(), $("#modal-input-tags").val(), e.target.result
+						pingId, $("#modal-input-title").val(),
+						$("#modal-input-description").val(),
+						dtPickerVal(), 
+						$("#modal-input-color").val(), 
+						strToTags($("#modal-input-tags").val()),
+						e.target.result
 					);
         		}
     		}
     		else {
 				updatePing(
-					pingId, pingType, $("#modal-input-title").val(), $("#modal-input-description").val(),
-					dtPickerVal(), $("#modal-input-color").val(), $("#modal-input-tags").val(), null
+					pingId, 
+					$("#modal-input-title").val(), 
+					$("#modal-input-description").val(),
+					dtPickerVal(), 
+					$("#modal-input-color").val(), 
+					strToTags($("#modal-input-tags").val()),
+					null
 				);
     		}
 		} else {
@@ -107,23 +105,35 @@ $(document).ready(function() {
 			if( file ) {
 				reader.onload = function(e) {
 					createPing(
-						$("#modal-input-lon").val(), $("#modal-input-lat").val(), $("#modal-input-title").val(),
-						$("#modal-input-description").val(), dtPickerVal(), $("#modal-input-color").val(), $("#modal-input-tags").val(), e.target.result
+						$("#modal-input-lon").val(), 
+						$("#modal-input-lat").val(), 
+						$("#modal-input-title").val(),
+						$("#modal-input-description").val(), 
+						dtPickerVal(), 
+						$("#modal-input-color").val(), 
+						strToTags($("#modal-input-tags").val()),
+						e.target.result
 					);
         		}
     		}
     		else {
 				createPing(
-					$("#modal-input-lon").val(), $("#modal-input-lat").val(), $("#modal-input-title").val(),
-					$("#modal-input-description").val(), dtPickerVal(), $("#modal-input-color").val(), $("#modal-input-tags").val(), null
+					$("#modal-input-lon").val(), 
+					$("#modal-input-lat").val(), 
+					$("#modal-input-title").val(),
+					$("#modal-input-description").val(), 
+					dtPickerVal(), 
+					$("#modal-input-color").val(), 
+					strToTags($("#modal-input-tags").val()),
+					null
 				);
     		}
 		}
 	});
 
-	function lookupPingInCache(id, type) {
-		for( var i in PINGS )
-			if( PINGS[i].id == id && PINGS[i].type == type ) return PINGS[i];
+	function lookupPingInCache(id) {
+		for( var i in PINGS ) 
+			if( PINGS[i].ping_id == id ) return PINGS[i];
 		return null;
 	}
 
@@ -164,10 +174,9 @@ $(document).ready(function() {
 
 	function createMarker(ping) {
 		var el = document.createElement('div'), r;
-		el.id = ping.type + '-' + ping.id;
-		el.setAttribute('data-ping-id', ping.id );
+		el.id = 'ping-' + ping.ping_id;
+		el.setAttribute('data-ping-id', ping.ping_id );
 		el.innerHTML = '<span>' + (ping.title ? ping.title : '_без заголовка') + '</span>';
-		el.setAttribute('class', 'ping-type-' + ping.type );
 		r = new mapboxgl.Marker(el, {offset:[-3, -3]})
 			.setLngLat([ping.lng, ping.lat])
 			.addTo(MAP);
@@ -190,18 +199,17 @@ $(document).ready(function() {
 		$('#modal form input').val(null);
 		$('#modal form textarea').val(null);
 
-		var ping = lookupPingInCache($(this).data('ping-id'), $(this).hasClass('ping-type-post') ? 'post' : 'event');
+		var ping = lookupPingInCache($(this).data('ping-id'));
 		if( ping ) {
 			$('.modal-dialog .modal-title').html('Редактировать пинг');
-			$('#modal-input-id').val( ping.id );
-			$('#modal-input-type').val( ping.type );
+			$('#modal-input-id').val( ping.ping_id );
 			$('#modal-input-title').val( ping.title );
 			$('#modal-input-description').val( ping.description );
-			$('#modal-input-tags').val( ping.tags );
+			$('#modal-input-tags').val(tagsToStr(ping.tags));
 			dtPickerVal(ping.fire_ts);
 			setModalFile(ping.file_name);
 			setModalColor(ping.color);
-			setModalDatetime( ping.type == 'event' );
+			setModalDatetime(true);
 			$('#modal-button-delete').attr('disabled', false);
 		}
 		else {
@@ -217,25 +225,24 @@ $(document).ready(function() {
 
 	function createPing(lon, lat, title, description, dt, color, tags, file_data) {
 		$.post("/proxy/create-ping", {
-			"ping_lon": lon,
-			"ping_lat": lat,
-			"ping_title": title,
-			"ping_description": description,
-			'ping_timestamp': dt,
-			"ping_color": color,
-			"ping_tags": tags,
-			'ping_file_data': file_data
+			'lon': lon,
+			'lat': lat,
+			'title': title,
+			'description': description,
+			'timestamp': dt,
+			'color': color,
+			'tags': tags,
+			'file_data': file_data
 		}).done(function(data){
 			if( data.code == 0 ) {
 				PINGS.push({
-					'id': data.ping_id,
-					'type': data.ping_type,
+					'ping_id': data.ping_id,
 					'title': $("#modal-input-title").val(),
 					'lng': $("#modal-input-lon").val(),
 					'lat': $("#modal-input-lat").val(),
 					'description': $("#modal-input-description").val(),
 					'color': $("#modal-input-color").val(),
-					'tags': $("#modal-input-tags").val(),
+					'tags': strToTags($("#modal-input-tags").val()),
 					'fire_ts': dtPickerVal()
 				});
 				createMarker(PINGS[PINGS.length-1]);
@@ -249,32 +256,30 @@ $(document).ready(function() {
 		});
 	}
 
-	function updatePing(id, type, title, description, dt, color, tags, file_data) {
+	function updatePing(id, title, description, dt, color, tags, file_data) {
 		var args = {
 			'ping_id': id,
-			'ping_type': type,
-			'ping_title': title,
-			'ping_description': description,
-			'ping_timestamp': dt,
-			'ping_color': color,
-			'ping_tags': tags,
-			'ping_file_data': file_data
+			'title': title,
+			'description': description,
+			'timestamp': dt,
+			'color': color,
+			'tags': tags,
+			'file_data': file_data
 		};
-		$.post("/proxy/update-ping", args)
-			.done(function(data){
+		$.post('/proxy/update-ping', args)
+			.done(function(data) {
 				if( data.code == 0 ) {
-					var id = $('#modal-input-id').val(),
-						type = $('#modal-input-type').val(),
-						ping = lookupPingInCache(id, type);
+					var pingId = $('#modal-input-id').val(),
+						ping = lookupPingInCache(pingId);
 					// обновить данные в PINGS
 					ping.title = $("#modal-input-title").val();
-					ping.description = $("#modal-input-description").val();
+					ping.description = $('#modal-input-description').val();
 					ping.color = $("#modal-input-color").val();
-					ping.tags = $("#modal-input-tags").val();
+					ping.tags = strToTags($("#modal-input-tags").val());
 					ping.fire_ts = dtPickerVal();
 					ping.file_name = data.file_name
 					// Обновить маркер
-					$( '#' + type + '-' + id + ' span').html( $("#modal-input-title").val() );
+					$( '#ping-' + pingId + ' span').html( $("#modal-input-title").val() );
 					$('#modal').modal('hide');
 				}
 				else {
@@ -285,12 +290,12 @@ $(document).ready(function() {
 			});
 	}
 
-	function deletePing(id, type) {
-		$.getJSON('/proxy/delete-ping', { 'ping_id': id, 'ping_type': type })
+	function deletePing(id) {
+		$.getJSON('/proxy/delete-ping', {'ping_id': id})
 			.done(function(data){
 				if( data.code == 0 ) {
 					// удаляем пинг с карты и закрываем диалог
-					$('#' + type + '-' + id).remove();
+					$('#ping-' + id).remove();
 					$('#modal').modal('hide');
 				}
 				else {
@@ -302,12 +307,35 @@ $(document).ready(function() {
 
 	function dtPickerVal(ts) {
 		if( ts ) {
-			console.log(ts);
 			$('#modal-input-datetime').data('DateTimePicker').date(moment(ts*1000)); // coz of millisecs
 		}
 		else {
 			var dt = $('#modal-input-datetime').data('DateTimePicker').date();
 			return dt ? dt.utc().unix() : null
+		}
+	}
+
+	function strToTags(str) {
+		if( str ) {
+			return str.split('#')
+				.filter(function(val) {
+					return (val != null && val != '');
+				})
+				.map(function(val) {
+					return val.trim();
+				});
+		}
+		else {
+			return null
+		}
+	}
+
+	function tagsToStr(tags) {
+		if( tags ) {
+			return '#' + tags.join(' #');
+		}
+		else {
+			return '';
 		}
 	}
 

@@ -1,7 +1,7 @@
 import math
 
 
-__all__ = ['Coordinates']
+__all__ = ['Point']
 
 
 class Point(object):

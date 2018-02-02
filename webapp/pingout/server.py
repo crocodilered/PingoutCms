@@ -111,12 +111,13 @@ class Server:
         self._logger.debug(response)
         if response.status_code == 200:
             response_json = json.loads(response.text)
-            if response_json["code"] == 0:
-                r = response_json["file_name"]
+            if response_json["code"] == 0 and response_json["file"]:
+                r = response_json["file"]["file_name"]
         return r
 
     def get_file_url(self, filename):
         return "http://%s/%s" % (self._server_host, filename)
+
 
 class Tls12HttpAdapter(HTTPAdapter):
     def init_poolmanager(self, connections, maxsize, block=False):
