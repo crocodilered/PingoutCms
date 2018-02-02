@@ -115,8 +115,11 @@ class Server:
                 r = response_json["file"]["file_name"]
         return r
 
-    def get_file_url(self, filename):
-        return "http://%s/%s" % (self._server_host, filename)
+    def get_file_url(self, filename, image_size=None):
+        if image_size:
+            return "http://%s/%s_%s" % (self._server_host, filename, image_size)
+        else:
+            return "http://%s/%s" % (self._server_host, filename)
 
 
 class Tls12HttpAdapter(HTTPAdapter):
