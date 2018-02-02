@@ -146,9 +146,9 @@ $(document).ready(function() {
 		}
 	}
 
-	function setModalFile(filename) {
-		if( filename ) {
-			$('#form-group-file img').attr('src', filename);
+	function setModalFile(file) {
+		if( file && file.file_name ) {
+			$('#form-group-file img').attr('src', file.file_name);
 			$('#form-group-file img').show();
 		}
 		else {
@@ -207,7 +207,7 @@ $(document).ready(function() {
 			$('#modal-input-description').val( ping.description );
 			$('#modal-input-tags').val(tagsToStr(ping.tags));
 			dtPickerVal(ping.fire_ts);
-			setModalFile(ping.file_name);
+			setModalFile(ping.file);
 			setModalColor(ping.color);
 			setModalDatetime(true);
 			$('#modal-button-delete').attr('disabled', false);
