@@ -1,35 +1,21 @@
 <%inherit file="_base.html"/>
 
 <%block name="head">
-	<script src='https://api.mapbox.com/mapbox-gl-js/v0.38.0/mapbox-gl.js'></script>
 	<link href='https://api.mapbox.com/mapbox-gl-js/v0.38.0/mapbox-gl.css' rel='stylesheet' />
-	<script src="/static/mappa.js"></script>
-
-
 	<link href="/static/bootstrap-colorpickersliders/dist/bootstrap.colorpickersliders.min.css" rel="stylesheet" type="text/css" media="all">
+	<link href="/static/bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.css" rel="stylesheet">
+	<script src='https://api.mapbox.com/mapbox-gl-js/v0.38.0/mapbox-gl.js'></script>
 	<script src="//cdnjs.cloudflare.com/ajax/libs/tinycolor/0.11.1/tinycolor.min.js"></script>
-	<script src="/static/bootstrap-colorpickersliders/dist/bootstrap.colorpickersliders.min.js"></script>
-
 	<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.9.0/moment-with-locales.js"></script>
 	<script src="/static/bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
-	<link href="/static/bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.css" rel="stylesheet">
+	<script src="/static/bootstrap-colorpickersliders/dist/bootstrap.colorpickersliders.min.js"></script>
+	<script src="/static/mappa.js"></script>
 </%block>
 
-<%block name="main">
-
-	<div id="toolbar">
-		<!-- <button id="button-search" type="button" class="btn btn-default btn-sm" aria-label="Search ping">
-  			<span class="glyphicon glyphicon-search" aria-hidden="true"></span>
-		</button>
-		<div id="wrapper-input-search"><input id="input-search"></div> -->
-		<button id="button-signout" type="button" class="btn btn-default btn-sm" aria-label="Signout">
-  			<span class="glyphicon glyphicon-log-out" aria-hidden="true"></span>
-		</button>
-	</div>
-
+<%block name="content">
 	<div id="map"></div>
 
-	<div id="modal" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog">
+	<div id="modal" class="modal fade" tabindex="-1" role="dialog">
 		<div class="modal-dialog modal-lg" role="document">
 			<div class="modal-content">
 				<div class="modal-header">

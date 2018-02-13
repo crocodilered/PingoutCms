@@ -1,0 +1,24 @@
+<%inherit file="_base.html"/>
+
+<%block name="content">
+	<div class="container">
+		<h1 style="opacity:0">Жалобы</h1>
+		<div id="complaints" style="display:none">
+			<!-- TODO: open ping|user info in modal, not in new window. -->
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Дата</th>
+						<th>Автор</th>
+						<th>Пинг, на который пожаловались</th>
+						<th>Пользователь, на которого пожаловались</th>
+						<th></th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
+		</div>
+		<!--span class="glyphicon glyphicon-refresh glyphicon-refresh-animate glyphicon-lg" aria-hidden="true"></span-->
+   	</div>
+	<script src="/static/complaints.js"></script>
+</%block>

@@ -2,6 +2,8 @@ import cherrypy
 from binascii import a2b_base64
 from webapp.pingout.server import Server
 from webapp.pingout.point import Point
+from webapp.libs.users_lookup import UsersLookup
+from webapp.libs.pings_lookup import PingsLookup
 
 
 __all__ = ["PingoutCmsProxy"]
@@ -65,35 +67,119 @@ class PingoutCmsProxy(object):
                 cherrypy.session["user_id"] = None
             r = {"code": response["code"]}
         else:
-            #  он блять и не залогинен нигде
+            # он блять и не залогинен нигде
             r = {"code": -1}
+        return r
+
+    @cherrypy.expose(["list-complaints"])
+    @cherrypy.tools.json_out()
+    def list_complaints(self):
+        """
+        Запрос списока жалоб на пинги/пользователей.
+
+        :return:
+        """
+        cherrypy.log("Start of list_complaints handler.")
+        token, user_id = self._get_identity()
+        r = {"code": 0}
+        if user_id:
+            server = self._get_server()
+            response = server.action("get_complaint_list", token, {"limit": 100})
+            if response["code"] == 0:
+                cherrypy.log("got %s complains." % len(response["complaints"]))
+                complaints = response["complaints"]
+
+                # Build two arrays if users and pings ids.
+                ping_ids = user_ids = []
+
+                for complaint in complaints:
+                    if "to_ping_id" in complaint:
+                        ping_ids.append(int(complaint["to_ping_id"]))
+                    if "to_user_id" in complaint:
+                        user_ids.append(int(complaint["to_user_id"]))
+                    user_ids.append(int(complaint["user_id"]))
+                # Now get data for listed pings and users
+
+                pings = users = None
+
+                if ping_ids:
+                    response = server.action("get_ping_info", token, {"ping_ids": list(set(ping_ids))})
+                    if response["code"] == 0:
+                        pings = PingsLookup(response["pings"])
+                        # Have to add authors of complained pings t user_ids
+                        for ping in response["pings"]:
+                            user_ids.append(int(ping["user_id"]))
+                    else:
+                        r["code"] = int(response["code"] + 10000)
+
+                if user_ids:
+                    response = server.action("get_user_info", token, {"user_ids": list(set(user_ids))})
+                    if response["code"] == 0:
+                        users = UsersLookup(response["users"])
+                    else:
+                        r["code"] = int(response["code"] + 10000)
+
+                # Now build entire complaints array
+                complaints_for_response = []
+                for complaint in complaints:
+                    rec = {
+                        "complaint_id": complaint["complaint_id"],
+                        "user_id": complaint["user_id"],
+                        "user_name": users.get(complaint["user_id"])["name"],
+                        "reason": complaint["reason"],
+                        "ts": complaint["ts"]
+                    }
+                    if "description" in complaint:
+                        rec["description"] = complaint["description"]
+                    if "to_user_id" in complaint:
+                        rec["to_user_id"] = complaint["to_user_id"]
+                        rec["to_user_name"] = users.get(complaint["to_user_id"])["name"]
+                    if "to_ping_id" in complaint:
+                        rec["to_ping_id"] = complaint["to_ping_id"]
+                        rec["to_ping_title"] = pings.get(complaint["to_ping_id"])["title"]
+                        rec["to_ping_user_id"] = pings.get(complaint["to_ping_id"])["user_id"]
+                        rec["to_ping_user_name"] = users.get(pings.get(complaint["to_ping_id"])["user_id"])["name"]
+                    complaints_for_response.append(rec)
+                r["complaints"] = complaints_for_response
+            else:
+                r["code"] = response["code"]
+        else:
+            r["code"] = -1
         return r
 
     @cherrypy.expose(["list-pings"])
     @cherrypy.tools.json_out()
-    def list_pings(self):
+    def list_pings(self, ping_ids=None):
         """
-        Запрос списока собственных пингов.
+        Запрос списка собственных пингов.
+        Список дополняется расширенным набором данных из get_ping_info
 
+        :param ping_ids: Список ID пингов, информацию о которых необходимо вернуть.
+                    Если не передан, возвращается список всех пингов текущего пользователя.
+                    Массив передается в виде строки с | в качестве разделителя.
         :return: Массив с пингами. Каждый элемент -- это объект.
         """
         token, user_id = self._get_identity()
         r = {"code": 0}
         if user_id:
             server = self._get_server()
-            response = server.action("get_news_feed", token, {"limit": 100, "user_id": user_id})
-            if response["code"] == 0:
-                ping_ids = []
-                for p in (int(obj["ping_id"]) for obj in response["news_feed"] if "ping_id" in obj):
-                    ping_ids.append(p)
-                if ping_ids:
-                    response = server.action("get_ping_info", token, {"ping_ids": ping_ids})
-                    if response["code"] == 0:
-                        r["pings"] = self.append_extra(response["pings"])
-                    else:
-                        r["code"] = int(response["code"] + 10000)
+            ping_ids_list = []
+            if ping_ids:
+                for ping_id in (int(i) for i in ping_ids.split("|")):
+                    ping_ids_list.append(ping_id)
             else:
-                r["code"] = response["code"]
+                response = server.action("get_news_feed", token, {"limit": 100, "user_id": user_id})
+                if response["code"] == 0:
+                    for p in (int(obj["ping_id"]) for obj in response["news_feed"] if "ping_id" in obj):
+                        ping_ids_list.append(p)
+                else:
+                    r["code"] = response["code"]
+            if ping_ids_list:
+                response = server.action("get_ping_info", token, {"ping_ids": ping_ids_list})
+                if response["code"] == 0:
+                    r["pings"] = self.append_extra(response["pings"])
+                else:
+                    r["code"] = int(response["code"] + 10000)
         else:
             r["code"] = -1
         return r
