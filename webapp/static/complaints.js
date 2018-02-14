@@ -4,7 +4,7 @@ var COMPLAINTS = [];
 
 $(document).ready(function() {
 
-	$('.progress-global').show();
+	GlobalProgressBar.show();
 
 	$.ajax({
 		xhr: function () {
@@ -13,7 +13,7 @@ $(document).ready(function() {
 			xhr.addEventListener('progress', function (evt) {
 				if ( evt.lengthComputable ) {
 					var complete = 100*evt.loaded/evt.total;
-					$('.progress-global .progress-bar').css('width', complete + '%');
+					GlobalProgressBar.update(complete);
 				}
 			}, false);
 
@@ -62,7 +62,7 @@ function complaintsLoadSuccess (data) {
 
 		$('#pings tr, #users tr').click(openModal);
 
-		setTimeout(function () { $('.progress-global').fadeOut() }, 500);
+		GlobalProgressBar.hide();
 
 		$('#pings').fadeIn();
 		$('#users').fadeIn();

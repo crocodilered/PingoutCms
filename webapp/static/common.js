@@ -2,8 +2,6 @@
 
 $(document).ready(function() {
 
-	$('.progress-global').css('top', $('.navbar').outerHeight() + 'px');
-
 	$('#navbar-button-signout').click(function(e){
 		$.getJSON('/proxy/sign-out')
 			.done(function(data){
@@ -13,13 +11,19 @@ $(document).ready(function() {
 
 });
 
+class GlobalProgressBar {
 
-function renderHtmlTag (tag, content, options) {
-	var html = '';
-	if ( content ) {
-		html += '<' + tag + '>';
-		html += content;
-		html += '</' + tag + '>';
+	static show() {
+		$('.progress-global').css('top', '0');
+		$('.progress-global').show();
 	}
-	return html;
-}
+
+	static update(value) {
+		$('.progress-global .progress-bar').css('width', value + '%');
+	}
+
+	static hide() {
+		setTimeout(function () { $('.progress-global').fadeOut() }, 300);
+	}
+
+};
