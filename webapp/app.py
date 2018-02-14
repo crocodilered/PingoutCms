@@ -6,7 +6,6 @@ __all__ = ['PingoutCmsApp']
 
 class PingoutCmsApp(object):
     def __compose_response(self, custom_data=None):
-        q = 1
         common_data = {
             "token": cherrypy.session.get("token", None),
             "user_id": cherrypy.session.get("user_id", None),
@@ -15,7 +14,7 @@ class PingoutCmsApp(object):
         return {**common_data, **custom_data} if custom_data else common_data
 
     @cherrypy.expose
-    @cherrypy.tools.render(template='auth.html')
+    @cherrypy.tools.render(template='index.html')
     def index(self):
         return self.__compose_response()
 
