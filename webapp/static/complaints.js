@@ -26,7 +26,7 @@ $(document).ready(function() {
 function modalButtonClick (action) {
 	var complaintId = $('#modal').data('complaint_id');
 	$.get('/api/respond-to-complaint', {complaint_id: complaintId, action: action})
-		.done(function(){
+		.done(function () {
 			$('.complaints tr[data-complaint_id="' + complaintId + '"]').remove();
 			$('#modal').modal('hide');
 		});
@@ -36,7 +36,9 @@ function complaintRenderTr (c) {
 	var html = '';
 	html += '<tr data-complaint_id="' + c.complaint_id + '">';
 	html += '<td>' + tsToStr(c.ts) + '</td>';
-	html += '<td>' + c.user_name + '</td>';
+	html += '<td>' + c.user_id;
+	if (c.user_name) html += ': ' + c.user_name;
+	html += '</td>';
 	if ( c.to_ping_id ) html += '<td>' + pingToHtml(c) + '</td>'; 
 	else if ( c.to_user_id ) html += '<td>' + userToHtml(c) + '</td>';
 	html += '</tr>';
