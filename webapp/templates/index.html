@@ -1,0 +1,49 @@
+<%inherit file="_base.html"/>
+
+<%block name="head">
+	<script src="/static/auth.js"></script>
+</%block>
+
+<%block name="content">
+	% if user_id:
+		<div class="container">
+			<h1>Hello!</h1>
+		</div>
+	% else:
+		<div class="container" style="max-width:340px; margin-top:5%;">
+			<form class="form-horizontal">
+				<h2 style="text-align:center">Войти</h2>
+
+				<div id="form-group-phone" class="form-group">
+					<div class="col-md-12">
+						<div class="input-group">
+							<span class="input-group-addon"><i class="glyphicon glyphicon-earphone"></i></span>
+							<input id="input-phone" placeholder="Введите свой номер телефона" class="form-control" type="text" value="" autofocus required>
+							<div class="input-group-btn">
+								<button id="button-getcode" class="btn btn-primary">
+									<span class="glyphicon glyphicon-arrow-right"></span>
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div id="form-group-code" class="form-group" >
+					<div class="col-md-12">
+						<p class="help-block">Вам выслан СМС-код, введите его для подтверждения вашей подозрительной личности.</p>
+						<div class="input-group">
+							<span class="input-group-addon"><i class="glyphicon glyphicon-sunglasses"></i></span>
+							<input id="input-code" placeholder="Введите смс-код" class="form-control" type="text" required>
+							<div class="input-group-btn">
+								<button id="button-signin" class="btn btn-primary">
+									<span class="glyphicon glyphicon-arrow-right"></span>
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+
+		  </form>
+		</div>
+	% endif
+</%block>
