@@ -11,19 +11,20 @@ __all__ = ["PingoutCmsProxy"]
 
 class PingoutCmsProxy(object):
     def __init__(self):
-        self._server = None
+        self.__server = None
 
-    def _get_server(self):
-        if not self._server:
+    @property
+    def server(self):
+        if not self.__server:
             app = cherrypy.tree.apps[""]
-            self._server = Server(app.config["PingOut"]["server.host"],
-                                  app.config["PingOut"]["server.port_socket"],
-                                  app.config["PingOut"]["server.port_https"],
-                                  app.config["PingOut"]["server.cert"])
-        return self._server
+            self.__server = Server(app.config["PingOut"]["server.host"],
+                                   app.config["PingOut"]["server.port_socket"],
+                                   app.config["PingOut"]["server.port_https"],
+                                   app.config["PingOut"]["server.cert"])
+        return self.__server
 
-    @staticmethod
-    def _get_identity():
+    @property
+    def identity(self):
         return cherrypy.session.get("token", None), cherrypy.session.get("user_id", None)
 
     @staticmethod
@@ -34,16 +35,14 @@ class PingoutCmsProxy(object):
     @cherrypy.expose(["get-code"])
     @cherrypy.tools.json_out()
     def get_code(self, phone):
-        server = self._get_server()
-        response = server.action("send_otp", args={"phone_number": phone})
+        response = self.server.action("send_otp", args={"phone_number": phone})
         r = {"code": response["code"]}
         return r
 
     @cherrypy.expose(["sign-in"])
     @cherrypy.tools.json_out()
     def sign_in(self, phone, code):
-        server = self._get_server()
-        response = server.action("validate_otp", args={
+        response = self.server.action("validate_otp", args={
             "phone_number": phone,
             "one_time_password": int(code),
             "install_id": "webapp%s" % phone,
@@ -58,10 +57,9 @@ class PingoutCmsProxy(object):
     @cherrypy.expose(["sign-out"])
     @cherrypy.tools.json_out()
     def sign_out(self):
-        token, user_id = self._get_identity()
+        token, user_id = self.identity
         if token and user_id:
-            server = self._get_server()
-            response = server.action("sign_out", token)
+            response = self.server.action("sign_out", token)
             if response["code"] == 0:
                 cherrypy.session["token"] = None
                 cherrypy.session["user_id"] = None
@@ -79,12 +77,10 @@ class PingoutCmsProxy(object):
 
         :return:
         """
-        cherrypy.log("Start of list_complaints handler.")
-        token, user_id = self._get_identity()
+        token, user_id = self.identity
         r = {"code": 0}
         if user_id:
-            server = self._get_server()
-            response = server.action("get_complaint_list", token, {"limit": 100})
+            response = self.server.action("get_complaint_list", token, {"limit": 100})
             if response["code"] == 0:
                 cherrypy.log("got %s complains." % len(response["complaints"]))
                 complaints = response["complaints"]
@@ -103,7 +99,7 @@ class PingoutCmsProxy(object):
                 pings = users = None
 
                 if ping_ids:
-                    response = server.action("get_ping_info", token, {"ping_ids": list(set(ping_ids))})
+                    response = self.server.action("get_ping_info", token, {"ping_ids": list(set(ping_ids))})
                     if response["code"] == 0:
                         pings = PingsLookup(response["pings"])
                         # Have to add authors of complained pings t user_ids
@@ -113,7 +109,7 @@ class PingoutCmsProxy(object):
                         r["code"] = int(response["code"] + 10000)
 
                 if user_ids:
-                    response = server.action("get_user_info", token, {"user_ids": list(set(user_ids))})
+                    response = self.server.action("get_user_info", token, {"user_ids": list(set(user_ids))})
                     if response["code"] == 0:
                         users = UsersLookup(response["users"])
                     else:
@@ -125,20 +121,27 @@ class PingoutCmsProxy(object):
                     rec = {
                         "complaint_id": complaint["complaint_id"],
                         "user_id": complaint["user_id"],
-                        "user_name": users.get(complaint["user_id"])["name"],
+                        "user_name": users.get(complaint["user_id"])["profile_name"],
                         "reason": complaint["reason"],
                         "ts": complaint["ts"]
                     }
                     if "description" in complaint:
                         rec["description"] = complaint["description"]
                     if "to_user_id" in complaint:
-                        rec["to_user_id"] = complaint["to_user_id"]
-                        rec["to_user_name"] = users.get(complaint["to_user_id"])["name"]
+                        user = users.get(complaint["to_user_id"])
+                        rec["to_user_id"] = user["user_id"]
+                        rec["to_user_name"] = user["profile_name"]
+                        rec["to_user_about"] = user["profile_about"]
+                        rec["to_user_avatar"] = self.server.get_file_url(user["profile_avatar"], 600) if user["profile_avatar"] else ""
                     if "to_ping_id" in complaint:
-                        rec["to_ping_id"] = complaint["to_ping_id"]
-                        rec["to_ping_title"] = pings.get(complaint["to_ping_id"])["title"]
-                        rec["to_ping_user_id"] = pings.get(complaint["to_ping_id"])["user_id"]
-                        rec["to_ping_user_name"] = users.get(pings.get(complaint["to_ping_id"])["user_id"])["name"]
+                        ping = pings.get(complaint["to_ping_id"])
+                        rec["to_ping_id"] = ping["ping_id"]
+                        rec["to_ping_ts"] = ping["ts"]
+                        rec["to_ping_title"] = ping["title"]
+                        rec["to_ping_description"] = ping["description"]
+                        rec["to_ping_image"] = self.server.get_file_url(ping["image"], 600) if ping["image"] else ""
+                        rec["to_ping_user_id"] = ping["user_id"]
+                        rec["to_ping_user_name"] = users.get(ping["user_id"])["profile_name"]
                     complaints_for_response.append(rec)
                 r["complaints"] = complaints_for_response
             else:
@@ -147,11 +150,18 @@ class PingoutCmsProxy(object):
             r["code"] = -1
         return r
 
+    @cherrypy.expose(["respond-to-complaint"])
+    @cherrypy.tools.json_out()
+    def respond_to_complaint(self, complaint_id, action):
+        token, user_id = self.identity
+        response = self.server.action("respond_to_complaint", token, {"complaint_id": int(complaint_id), "action": int(action)})
+        return {"code": response["code"]}
+
     @cherrypy.expose(["list-pings"])
     @cherrypy.tools.json_out()
     def list_pings(self, ping_ids=None):
         """
-        Запрос списка собственных пингов.
+        Запрос списка пингов.
         Список дополняется расширенным набором данных из get_ping_info
 
         :param ping_ids: Список ID пингов, информацию о которых необходимо вернуть.
@@ -159,23 +169,22 @@ class PingoutCmsProxy(object):
                     Массив передается в виде строки с | в качестве разделителя.
         :return: Массив с пингами. Каждый элемент -- это объект.
         """
-        token, user_id = self._get_identity()
+        token, user_id = self.identity
         r = {"code": 0}
         if user_id:
-            server = self._get_server()
             ping_ids_list = []
             if ping_ids:
                 for ping_id in (int(i) for i in ping_ids.split("|")):
                     ping_ids_list.append(ping_id)
             else:
-                response = server.action("get_news_feed", token, {"limit": 100, "user_id": user_id})
+                response = self.server.action("get_news_feed", token, {"limit": 100, "user_id": user_id})
                 if response["code"] == 0:
                     for p in (int(obj["ping_id"]) for obj in response["news_feed"] if "ping_id" in obj):
                         ping_ids_list.append(p)
                 else:
                     r["code"] = response["code"]
             if ping_ids_list:
-                response = server.action("get_ping_info", token, {"ping_ids": ping_ids_list})
+                response = self.server.action("get_ping_info", token, {"ping_ids": ping_ids_list})
                 if response["code"] == 0:
                     r["pings"] = self.append_extra(response["pings"])
                 else:
@@ -194,10 +203,9 @@ class PingoutCmsProxy(object):
         :return: Ответ от сервера
         """
         r = {"code": 0}
-        token, user_id = self._get_identity()
+        token, user_id = self.identity
         if token:
-            server = self._get_server()
-            response = server.action("delete_ping", token, {"ping_id": int(ping_id)})
+            response = self.server.action("delete_ping", token, {"ping_id": int(ping_id)})
             r["code"] = response["code"]
         else:
             r["code"] = -1
@@ -223,9 +231,8 @@ class PingoutCmsProxy(object):
         # Это гребаный костыль, потому что CherryPy не дружит с массивами, передаваемыми JQuery
         tags = kwargs.pop('tags[]', [])
 
-        token, user_id = self._get_identity()
+        token, user_id = self.identity
         if token:
-            server = self._get_server()
             if ping_id:
                 args = {
                     "ping_id": int(ping_id),
@@ -239,13 +246,13 @@ class PingoutCmsProxy(object):
 
                 if file_data:
                     args["file_name"] = self.get_file_name(file_data)
-                    r["file_name"] = server.get_file_url(args["file_name"])
+                    r["file_name"] = self.server.get_file_url(args["file_name"])
 
                 if timestamp:
                     args["fire_ts"] = int(timestamp)
                     args["event_type"] = 1  # установил от балды
 
-                response = server.action("update_ping", token, args)
+                response = self.server.action("update_ping", token, args)
                 r["code"] = response["code"]
             else:
                 r["code"] = -2
@@ -274,10 +281,8 @@ class PingoutCmsProxy(object):
         # Это гребаный костыль, потому что CherryPy не дружит с массивами, передаваемыми JQuery
         tags = kwargs.pop('tags[]', [])
 
-        token, user_id = self._get_identity()
+        token, user_id = self.identity
         if token:
-            server = self._get_server()
-
             p = Point(0, 0)
             p.from_location(float(lon), float(lat))
 
@@ -294,14 +299,14 @@ class PingoutCmsProxy(object):
 
             if file_data:
                 args["file_name"] = self.get_file_name(file_data)
-                r["file_name"] = self._get_server().get_file_url(args["file_name"])
+                r["file_name"] = self.server.get_file_url(args["file_name"])
 
             if timestamp:
                 args["fire_ts"] = int(timestamp)
                 args["event_type"] = 1  # установил от балды
 
             if lon and lat:
-                response = server.action("create_ping", token, args)
+                response = self.server.action("create_ping", token, args)
                 r["code"] = response["code"]
                 if "ping_id" in response:
                     r["ping_id"] = response["ping_id"]
@@ -315,9 +320,8 @@ class PingoutCmsProxy(object):
         r = None
         if ping_file_data:
             # загрузим файл на сервер
-            server = self._get_server()
-            token, user_id = self._get_identity()
-            ping_file_name = server.upload_file(token, a2b_base64(ping_file_data.split(",")[1]))
+            token, user_id = self.identity
+            ping_file_name = self.server.upload_file(token, a2b_base64(ping_file_data.split(",")[1]))
             if ping_file_name:
                 r = ping_file_name
             return r
@@ -336,5 +340,5 @@ class PingoutCmsProxy(object):
                 ping["lng"], ping["lat"] = p.get_location()
             # Добавим адрес сервера к file_name
             if "file" in ping and "file_name" in ping["file"]:
-                ping["file"]["file_name"] = self._get_server().get_file_url(ping["file"]["file_name"], 120)
+                ping["file"]["file_name"] = self.server.get_file_url(ping["file"]["file_name"], 120)
         return pings

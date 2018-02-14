@@ -37,18 +37,6 @@ class PingoutCmsApp(object):
         return self.__compose_response()
 
     @cherrypy.expose
-    @cherrypy.tools.render(template='ping_view.html')
-    @cherrypy.tools.authentication()
-    def ping(self, ping_id):
-        return self.__compose_response({"ping_id": ping_id})
-
-    @cherrypy.expose
-    @cherrypy.tools.render(template='user_view.html')
-    @cherrypy.tools.authentication()
-    def user(self, user_id):
-        return self.__compose_response({"user_id": user_id})
-
-    @cherrypy.expose
     def default(self, **kwargs):
         cherrypy.response.status = 404
         return b"<h1>404</h1>"

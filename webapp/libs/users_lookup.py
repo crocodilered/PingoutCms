@@ -9,12 +9,11 @@ class UsersLookup(AbstractLookup):
         return user["user_id"]
 
     def val(self, user):
-        r = {
-            "user_id": user["user_id"],
-            "name":    user["profile"]["name"]
+        return {
+            "user_id":        user["user_id"],
+            "profile_name":   user["profile"]["name"] if "gender" in user["profile"] else "",
+            "profile_gender": user["profile"]["gender"] if "gender" in user["profile"] else "",
+            "profile_age":    user["profile"]["age"] if "age" in user["profile"] else "",
+            "profile_about":  user["profile"]["about"] if "about" in user["profile"] else "",
+            "profile_avatar": user["profile"]["avatar_file_name"] if "avatar_file_name" in user["profile"] else "",
         }
-        if "gender" in user["profile"]:
-            r["profile_gender"] = user["profile"]["gender"]
-        if "age" in user["profile"]:
-            r["profile_age"] = user["profile"]["age"]
-        return r

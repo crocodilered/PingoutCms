@@ -24,6 +24,7 @@
  */
 
 .modal-dialog .modal-header button { padding: 0 4px; }
+.modal-dialog h1 { margin-top: 0; }
 
 /*
  Mapbox upgrades
@@ -74,3 +75,20 @@
 
 /* colorswatches */
 .cp-container .cp-swatches .cp-swatch.actual { box-shadow:  0 0 0px 3px #fc0!important; }
+
+.progress-global {
+	position: absolute;
+	height: 2px;
+	width: 100%;
+	display: none;
+}
+
+/* complaints */
+
+.complaints #users, .complaints #pings {
+	display: none;
+}
+
+.complaints #users tr, .complaints #pings tr {
+	cursor: pointer;
+}

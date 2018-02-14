@@ -2,6 +2,8 @@
 
 $(document).ready(function() {
 
+	$('.progress-global').css('top', $('.navbar').outerHeight() + 'px');
+
 	$('#navbar-button-signout').click(function(e){
 		$.getJSON('/proxy/sign-out')
 			.done(function(data){
@@ -12,7 +14,7 @@ $(document).ready(function() {
 });
 
 
-function render (tag, content, options) {
+function renderHtmlTag (tag, content, options) {
 	var html = '';
 	if ( content ) {
 		html += '<' + tag + '>';

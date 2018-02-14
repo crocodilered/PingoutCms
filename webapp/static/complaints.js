@@ -1,50 +1,22 @@
 'use strict';
 
+var COMPLAINTS = [];
+
 $(document).ready(function() {
 
-	var complaintRenderTr = function (c) {
-		var html = '';
-		html += '<tr data-complaint_id="' + c.complaint_id + '"';
-		if ( c.to_ping_id ) html += ' data-to_ping_id="' + c.to_ping_id + '"';
-		if ( c.to_user_id ) html += ' data-to_user_id="' + c.to_user_id + '"';
-		html += '>';
-		html += '<td>' + tsToDateStr(c.ts) + '</td>';
-		html += '<td>' + c.user_name + '</td>';
-		html += '<td>' + pingToHtml(c) + '</td>';
-		html += '<td>' + userToHtml(c) + '</td>';
-		html += '<td><button class="button-accept">Согласен</button>    <button class="button-reject">Удалить</button></td>';
-		html += '</tr>';
-		return html;
-	}
+	$('.progress-global').show();
 
-	var complaintsLoadSuccess = function (data) {
-		var comp, html;
-		if ( data.code == 0 ) {
-			for ( var i in data.complaints ) $('#complaints tbody').append( complaintRenderTr(data.complaints[i]) );
-			$('#complaints').show(300);
-			$('.button-accept').click(function (event) {
-				var complainId = $(event.target).parents('tr').data('complaint_id');
-				// START FROM HERE
-				console.log(complainId);
-			});
-		}
-		else {
-			console.log("Got error while loading complaints. Code is: " + data.code);
-		}
-	}
-
-	// Load complaints
 	$.ajax({
 		xhr: function () {
 			var xhr = $.ajaxSettings.xhr();
-			// прогресс скачивания с сервера
+
 			xhr.addEventListener('progress', function (evt) {
 				if ( evt.lengthComputable ) {
-					var complete = evt.loaded/evt.total;
-					$('h1').css('opacity', complete);
-					console.log(complete);
+					var complete = 100*evt.loaded/evt.total;
+					$('.progress-global .progress-bar').css('width', complete + '%');
 				}
 			}, false);
+
 			return xhr;
 		},
 		async: true,
@@ -53,12 +25,79 @@ $(document).ready(function() {
 		success: complaintsLoadSuccess
 	});
 
+	$('#modal-button-accept').click(function(){ modalButtonClick(1); });
+	$('#modal-button-reject').click(function(){ modalButtonClick(2); });
+
 });
 
+function modalButtonClick (action) {
+	var complaintId = $('#modal').data('complaint_id');
+	$.get('/proxy/respond-to-complaint', {complaint_id: complaintId, action: action})
+		.done(function(){
+			$('.complaints tr[data-complaint_id="' + complaintId + '"]').remove();
+			$('#modal').modal('hide');
+		});
+}
+
+function complaintRenderTr (c) {
+	var html = '';
+	html += '<tr data-complaint_id="' + c.complaint_id + '">';
+	html += '<td>' + tsToStr(c.ts) + '</td>';
+	html += '<td>' + c.user_name + '</td>';
+	if ( c.to_ping_id ) html += '<td>' + pingToHtml(c) + '</td>'; 
+	else if ( c.to_user_id ) html += '<td>' + userToHtml(c) + '</td>';
+	html += '</tr>';
+	return html;
+}
+
+function complaintsLoadSuccess (data) {
+	if ( data.code == 0 ) {
+
+		COMPLAINTS = data.complaints;
+
+		for ( var i in COMPLAINTS ) {
+			if ( COMPLAINTS[i].to_ping_id ) $('#pings tbody').append( complaintRenderTr(COMPLAINTS[i]) );
+			if ( COMPLAINTS[i].to_user_id ) $('#users tbody').append( complaintRenderTr(COMPLAINTS[i]) );
+		}
+
+		$('#pings tr, #users tr').click(openModal);
+
+		setTimeout(function () { $('.progress-global').fadeOut() }, 500);
+
+		$('#pings').fadeIn();
+		$('#users').fadeIn();
+	}
+	else {
+		console.log("Got error while loading complaints. Code is: " + data.code);
+	}
+}
+
+function openModal (event) {
+	var complaintId = $(event.target).parents('tr').data('complaint_id'),
+		complaint = getComplaint(complaintId);
+
+	if ( complaint ) {
+		$('#modal').data('complaint_id', complaint.complaint_id);
+		if ( complaint.to_ping_id ) {
+			$('#modal h4.modal-title').text('Жалоба на пинг');
+			$('#modal .modal-body h1').text(complaint.to_ping_title);
+			$('#modal .modal-body p').text(complaint.to_ping_description);
+			$('#modal .modal-body img').attr('src', complaint.to_ping_image);
+		}
+		if ( complaint.to_user_id ) {
+			$('#modal h4.modal-title').text('Жалоба на пользователя');
+			$('#modal .modal-body h1').text(complaint.to_user_name);
+			$('#modal .modal-body p').text(complaint.to_user_about);
+			$('#modal .modal-body img').attr('src', complaint.to_user_avatar);
+		}
+		$('#modal').modal();
+	}
+}
+
 function pingToHtml (data) {
-	var r = '—';
+	var r = '';
 	if ( data.to_ping_id ) {
-		r = '<a href="/ping/?ping_id=' + data.to_ping_id + '">' + data.to_ping_id + '</a>';
+		r = data.to_ping_id;
 		if ( data.to_ping_title ) r += ': ' + data.to_ping_title;
 		r += '<br>';
 		r += '<small>by ' + data.to_ping_user_id;
@@ -69,15 +108,21 @@ function pingToHtml (data) {
 }
 
 function userToHtml (data) {
-	var r = '—';
+	var r = '';
 	if ( data.to_user_id ) {
-		r = '<a href="/ping/?ping_id=' + data.to_user_id + '">' + data.to_user_id + '</a>';
+		r = data.to_user_id;
 		if ( data.to_user_name ) r += ': ' + data.to_user_name;
 	}
 	return r;
 }
 
-function tsToDateStr (ts) {
+function tsToStr (ts) {
 	var date = new Date(ts*1000);
-	return date.toLocaleString();
+	return date.toLocaleString().slice(0,-3);
 }
+
+function getComplaint(id) {
+	for( var i in COMPLAINTS ) if( COMPLAINTS[i].complaint_id == id ) return COMPLAINTS[i];
+	return null;
+}
+
