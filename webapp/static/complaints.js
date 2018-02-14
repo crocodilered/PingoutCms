@@ -9,14 +9,7 @@ $(document).ready(function() {
 	$.ajax({
 		xhr: function () {
 			var xhr = $.ajaxSettings.xhr();
-
-			xhr.addEventListener('progress', function (evt) {
-				if ( evt.lengthComputable ) {
-					var complete = 100*evt.loaded/evt.total;
-					GlobalProgressBar.update(complete);
-				}
-			}, false);
-
+			xhr.addEventListener('progress', function (evt) { if ( evt.lengthComputable ) GlobalProgressBar.update(100*evt.loaded/evt.total); }, false);
 			return xhr;
 		},
 		async: true,

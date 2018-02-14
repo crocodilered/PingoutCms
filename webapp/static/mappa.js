@@ -2,6 +2,8 @@
 
 $(document).ready(function() {
 
+	GlobalProgressBar.show();
+
 	$('#map').css('top', $('.navbar').outerHeight() + 'px');
 
 	mapboxgl.accessToken = 'pk.eyJ1Ijoic2VyZ2V6b2xvdHVraGluIiwiYSI6ImNqNHRtYzF1ZjA2dncyd3FtcXRwajA0NWwifQ.dSvjI3CO2qXbR1qzSdv0HQ';
@@ -33,12 +35,24 @@ $(document).ready(function() {
 				if( MAP.getLayoutProperty(layers[i].id, 'text-field') )
 					MAP.setLayoutProperty(layers[i].id, 'text-field', '{name_ru}');
 			}
-			// загрузить и отобразить пинги
-			$.getJSON('/proxy/list-pings').done(function(data){
-				if( data.code != 0 ) return false;
-				PINGS = data.pings;
-				for( i in PINGS ) createMarker(PINGS[i]);
+
+			$.ajax({
+				xhr: function () {
+					var xhr = $.ajaxSettings.xhr();
+					xhr.addEventListener('progress', function (evt) { if ( evt.lengthComputable ) GlobalProgressBar.update(100*evt.loaded/evt.total); }, false);
+					return xhr;
+				},
+				async: true,
+				type: 'GET',
+				url: '/proxy/list-pings',
+				success: function (data) {
+					if( data.code != 0 ) return false;
+					PINGS = data.pings;
+					for( i in PINGS ) createMarker(PINGS[i]);
+					GlobalProgressBar.hide();
+				}
 			});
+
 		})
 		.on('click', openModal);
 
