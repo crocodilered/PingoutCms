@@ -20,7 +20,7 @@ $(document).ready(function() {
 					.removeClass('glyphicon-arrow-right')
 					.addClass('glyphicon-refresh glyphicon-refresh-animate');
 
-			$.getJSON('/proxy/get-code', {phone:phone})
+			$.getJSON('/api/get-code', {phone:phone})
 				.done(function(data) {
 					if( data.code != 0 ) {
 						alert("Ошибка!\nСервер вернул код " + data.code + ".");
@@ -65,7 +65,7 @@ $(document).ready(function() {
 			inputEl.parent('.input-group')
 				.removeClass('has-error');
 
-			$.getJSON('/proxy/sign-in', {
+			$.getJSON('/api/sign-in', {
 				phone: extractPhone($('#input-phone').val()),
 				code: inputEl.val()
 			})

@@ -3,7 +3,7 @@
 $(document).ready(function() {
 
 	$('#navbar-button-signout').click(function(e){
-		$.getJSON('/proxy/sign-out')
+		$.getJSON('/api/sign-out')
 			.done(function(data){
 				window.location.href = "/";
 			});

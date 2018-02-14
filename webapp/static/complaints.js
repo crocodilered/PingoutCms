@@ -14,7 +14,7 @@ $(document).ready(function() {
 		},
 		async: true,
 		type: 'GET',
-		url: '/proxy/list-complaints',
+		url: '/api/list-complaints',
 		success: complaintsLoadSuccess
 	});
 
@@ -25,7 +25,7 @@ $(document).ready(function() {
 
 function modalButtonClick (action) {
 	var complaintId = $('#modal').data('complaint_id');
-	$.get('/proxy/respond-to-complaint', {complaint_id: complaintId, action: action})
+	$.get('/api/respond-to-complaint', {complaint_id: complaintId, action: action})
 		.done(function(){
 			$('.complaints tr[data-complaint_id="' + complaintId + '"]').remove();
 			$('#modal').modal('hide');

@@ -6,10 +6,10 @@ from webapp.libs.users_lookup import UsersLookup
 from webapp.libs.pings_lookup import PingsLookup
 
 
-__all__ = ["PingoutCmsProxy"]
+__all__ = ["Api"]
 
 
-class PingoutCmsProxy(object):
+class Api(object):
     def __init__(self):
         self.__server = None
 
@@ -56,6 +56,7 @@ class PingoutCmsProxy(object):
 
     @cherrypy.expose(["sign-out"])
     @cherrypy.tools.json_out()
+    @cherrypy.tools.authentication()
     def sign_out(self):
         token, user_id = self.identity
         if token and user_id:
@@ -71,6 +72,7 @@ class PingoutCmsProxy(object):
 
     @cherrypy.expose(["list-complaints"])
     @cherrypy.tools.json_out()
+    @cherrypy.tools.authentication()
     def list_complaints(self):
         """
         Запрос списока жалоб на пинги/пользователей.
@@ -152,6 +154,7 @@ class PingoutCmsProxy(object):
 
     @cherrypy.expose(["respond-to-complaint"])
     @cherrypy.tools.json_out()
+    @cherrypy.tools.authentication()
     def respond_to_complaint(self, complaint_id, action):
         token, user_id = self.identity
         response = self.server.action("respond_to_complaint", token, {"complaint_id": int(complaint_id), "action": int(action)})
@@ -159,6 +162,7 @@ class PingoutCmsProxy(object):
 
     @cherrypy.expose(["list-pings"])
     @cherrypy.tools.json_out()
+    @cherrypy.tools.authentication()
     def list_pings(self, ping_ids=None):
         """
         Запрос списка пингов.
@@ -195,6 +199,7 @@ class PingoutCmsProxy(object):
 
     @cherrypy.expose(["delete-ping"])
     @cherrypy.tools.json_out()
+    @cherrypy.tools.authentication()
     def delete_ping(self, ping_id):
         """
         Удаление собственного пинга
@@ -213,6 +218,7 @@ class PingoutCmsProxy(object):
 
     @cherrypy.expose(["update-ping"])
     @cherrypy.tools.json_out()
+    @cherrypy.tools.authentication()
     def update_ping(self, ping_id, title, description, timestamp, color, file_data, **kwargs):
         """
         Обновление информации о пинге.
@@ -262,6 +268,7 @@ class PingoutCmsProxy(object):
 
     @cherrypy.expose(["create-ping"])
     @cherrypy.tools.json_out()
+    @cherrypy.tools.authentication()
     def create_ping(self, lon, lat, title, description, timestamp, color, file_data, **kwargs):
         """
         Создание пинга.

@@ -44,7 +44,7 @@ $(document).ready(function() {
 				},
 				async: true,
 				type: 'GET',
-				url: '/proxy/list-pings',
+				url: '/api/list-pings',
 				success: function (data) {
 					if( data.code != 0 ) return false;
 					PINGS = data.pings;
@@ -236,7 +236,7 @@ $(document).ready(function() {
 	}
 
 	function createPing(lon, lat, title, description, dt, color, tags, file_data) {
-		$.post("/proxy/create-ping", {
+		$.post("/api/create-ping", {
 			'lon': lon,
 			'lat': lat,
 			'title': title,
@@ -278,7 +278,7 @@ $(document).ready(function() {
 			'tags': tags,
 			'file_data': file_data
 		};
-		$.post('/proxy/update-ping', args)
+		$.post('/api/update-ping', args)
 			.done(function(data) {
 				if( data.code == 0 ) {
 					var pingId = $('#modal-input-id').val(),
@@ -303,7 +303,7 @@ $(document).ready(function() {
 	}
 
 	function deletePing(id) {
-		$.getJSON('/proxy/delete-ping', {'ping_id': id})
+		$.getJSON('/api/delete-ping', {'ping_id': id})
 			.done(function(data){
 				if( data.code == 0 ) {
 					// удаляем пинг с карты и закрываем диалог

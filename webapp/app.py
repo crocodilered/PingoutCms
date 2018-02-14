@@ -1,10 +1,10 @@
 import cherrypy
 
 
-__all__ = ['PingoutCmsApp']
+__all__ = ["RootApp"]
 
 
-class PingoutCmsApp(object):
+class RootApp(object):
     def __compose_response(self, custom_data=None):
         common_data = {
             "token": cherrypy.session.get("token", None),
