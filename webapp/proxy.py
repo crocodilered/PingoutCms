@@ -1,7 +1,7 @@
 import cherrypy
 from binascii import a2b_base64
-from webapp.pingout.server import Server
-from webapp.pingout.point import Point
+from webapp.libs.server import Server
+from webapp.libs.point import Point
 from webapp.libs.users_lookup import UsersLookup
 from webapp.libs.pings_lookup import PingsLookup
 
