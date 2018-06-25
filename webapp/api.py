@@ -35,6 +35,7 @@ class Api(object):
     @cherrypy.expose(["get-code"])
     @cherrypy.tools.json_out()
     def get_code(self, phone):
+        """ Get security code from server """
         response = self.server.action("send_otp", args={"phone_number": phone})
         r = {"code": response["code"]}
         return r
@@ -42,6 +43,7 @@ class Api(object):
     @cherrypy.expose(["sign-in"])
     @cherrypy.tools.json_out()
     def sign_in(self, phone, code):
+        """ Login user """
         response = self.server.action("validate_otp", args={
             "phone_number": phone,
             "one_time_password": int(code),
@@ -58,6 +60,7 @@ class Api(object):
     @cherrypy.tools.json_out()
     @cherrypy.tools.authentication()
     def sign_out(self):
+        """ Logout user """
         token, user_id = self.identity
         if token and user_id:
             response = self.server.action("sign_out", token)
