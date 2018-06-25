@@ -5,11 +5,11 @@ server.socket_port = 8080
 [/]
 tools.sessions.on = True
 tools.sessions.storage_class = cherrypy.lib.sessions.FileSession
-tools.sessions.storage_path = "sessions"
+tools.sessions.storage_path = "/var/PingoutCms/sessions"
 tools.render.on = True
 tools.gzip.on = True
 tools.encode.on = False
-tools.caching.on: False
+tools.caching.on = False
 
 [/proxy]
 tools.render.on = False
@@ -18,14 +18,20 @@ tools.response_headers.headers = [('Content-Type', 'text/json')]
 
 [/favicon.ico]
 tools.render.on = False
+tools.staticfile.on: True,
+tools.staticfile.filename: '/var/www/PingoutCms/webapp/static/favicon.png'
 
 [/static]
 tools.staticdir.on = True
-tools.staticdir.dir = 'webapp/static'
+tools.staticdir.dir = '/var/www/PingoutCms/webapp/static'
 tools.render.on = False
 
 [PingOut]
 server.host = '82.146.41.247'
 server.port_socket = 8091
 server.port_https = 443
-server.cert = 'cert/cert_dev.dat'
+server.cert = 'cert.dat'
+
+[Upload]
+upload.user_id = 1
+upload.user_token = 'xxx'
