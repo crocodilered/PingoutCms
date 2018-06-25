@@ -92,3 +92,9 @@
 .complaints #users tr, .complaints #pings tr {
 	cursor: pointer;
 }
+
+dl dt {
+	margin-top: 2rem;
+	font-size: 140%;
+	font-weight: normal;
+}
