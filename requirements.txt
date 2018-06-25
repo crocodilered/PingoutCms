@@ -2,4 +2,3 @@ cherrypy
 requests
 mako
 crcmod
-urllib3
