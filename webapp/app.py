@@ -1,15 +1,15 @@
 import cherrypy
 
 
-__all__ = ["RootApp"]
+__all__ = ['RootApp']
 
 
 class RootApp(object):
     def __compose_response(self, custom_data=None):
         common_data = {
-            "token": cherrypy.session.get("token", None),
-            "user_id": cherrypy.session.get("user_id", None),
-            "uri": cherrypy.request.path_info
+            'token': cherrypy.session.get('token', None),
+            'user_id': cherrypy.session.get('user_id', None),
+            'uri': cherrypy.request.path_info
         }
         return {**common_data, **custom_data} if custom_data else common_data
 
@@ -21,7 +21,7 @@ class RootApp(object):
     @cherrypy.expose
     @cherrypy.tools.render(template='error.html')
     def error(self, code):
-        return self.__compose_response({"code": code})
+        return self.__compose_response({'code': code})
 
     @cherrypy.expose
     @cherrypy.tools.render(template='mappa.html')
@@ -38,4 +38,4 @@ class RootApp(object):
     @cherrypy.expose
     def default(self, **kwargs):
         cherrypy.response.status = 404
-        return b"<h1>404</h1>"
+        return b'<h1>404</h1>'
