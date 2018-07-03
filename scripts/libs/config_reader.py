@@ -7,7 +7,7 @@ __all__ = ['ConfigReader']
 
 class ConfigReader:
     """
-    Read given config file and tranforms it to dict with values:
+    Read given config file and transforms it to dict with values:
     [Section]
         - key1: value1
         - key2: value2
@@ -36,6 +36,7 @@ class ConfigReader:
                         self.__config[section_title][key] = val
 
     def __parse_option(self, line):
+        """ Parse line with key/value pair ( server_host = '188.120.251.22' ) """
         key = val = None
         if line:
             m = re.match('([a-zA-Z_\.]+)\s*[:=]\s*(.+)', line)
