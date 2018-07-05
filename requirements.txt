@@ -2,4 +2,3 @@ cherrypy
 requests
 mako
 crcmod
-python-instagram
