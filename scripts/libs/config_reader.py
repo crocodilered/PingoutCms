@@ -52,3 +52,9 @@ class ConfigReader:
         if section in self.__config and key in self.__config[section]:
             r = self.__config[section][key]
         return r
+
+    def get_int(self, section, key):
+        return int(self.get(section, key))
+
+    def get_float(self, section, key):
+        return float(self.get(section, key))
