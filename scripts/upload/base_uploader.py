@@ -4,6 +4,7 @@
 import random
 import requests
 import logging
+import time
 from webapp.libs.server import Server
 from webapp.libs.point import Point
 from scripts.libs.config_reader import ConfigReader
@@ -13,30 +14,38 @@ __all__ = ['BaseUploader']
 
 
 class BaseUploader(object):
+    PING_TITLE_MAX_LEN = int(255 / 2)
+    PING_DESCRIPTION_MAX_LEN = int(4095 / 2)
 
     def __init__(self, config_file_path):
         if config_file_path:
             self.config = ConfigReader(config_file_path)
 
             # User who will upload credentials
-            self.USER_ID = int(self.config.get('Upload', 'upload.user_id'))
+            self.USER_ID = self.config.get_int('Upload', 'upload.user_id')
             self.TOKEN = self.config.get('Upload', 'upload.user_token')
+            self.TIMEOUT = self.config.get_float('Upload', 'upload.timeout')
 
             # Dict with tuples as key for fast finding
             self.existing_pings = {}
 
             # Pingout server config
             server_host = self.config.get('PingOut', 'server.host')
-            server_port_socket = int(self.config.get('PingOut', 'server.port_socket'))
-            server_port_https = int(self.config.get('PingOut', 'server.port_https'))
+            server_port_socket = self.config.get_int('PingOut', 'server.port_socket')
+            server_port_https = self.config.get_int('PingOut', 'server.port_https')
             server_cert = self.config.get('PingOut', 'server.cert')
             self.server = Server(server_host, server_port_socket, server_port_https, server_cert)
 
             # HTTP session to download data
             self.requests_session = requests.session()
 
+            # Logger
             self.logger = logging.getLogger('uploader')
-            logging.basicConfig(level=logging.WARN)
+            logging.basicConfig(level=logging.INFO)
+
+            # Counters
+            self.counter_pings_created = 0  # Number of created pings
+            self.counter_errors = 0  # Number of errors while ping creation
         else:
             raise BaseUploaderNoCfgFileException
 
@@ -63,51 +72,34 @@ class BaseUploader(object):
         """ Simply returns random color """
         return random.randrange(0, 12)
 
-    def load_existing_pings(self):
-        """ Load existing pings for doubles testing """
-        self.logger.info('Loading existing pings...')
-
-        ping_ids = []
-        # Lets pretend YL got less than 1000 records by hour
-        response = self.server.action('get_news_feed', self.TOKEN, {'limit': 100, 'user_id': self.USER_ID})
-        if response['code'] == 0:
-            for ping_id in (int(obj['ping_id']) for obj in response['news_feed'] if 'ping_id' in obj):
-                ping_ids.append(ping_id)
-        else:
-            self.logger.error('Got response error when loading ids: %s' % response['code'])
-
-        if ping_ids:
-            response = self.server.action('get_ping_info', self.TOKEN, {'ping_ids': ping_ids})
-            if response['code'] == 0:
-                # We need location and title only, so filter!
-                for ping in response['pings']:
-                    # self.existing_pings[(ping['x'], ping['y'], ping['title'])] = True
-                    self.existing_pings[ping['title']] = True
-            else:
-                self.logger.error('Got response error when loading pings: %s' % response['code'])
-
-        self.logger.info('Got %s records' % len(self.existing_pings))
+    def is_ping_exists(self, ping):
+        """
+        Test if there is such ping on the server.
+        Approach: search ping with full title and if found... We got this sonofabitch!
+        :param ping:
+        :return:
+        """
+        response = self.server.action('search', self.TOKEN, {'text': ping['title']})
+        return response and response['found'] and len(response['found'])>0 and response['found'][0]['ping_id']
 
     def create_ping(self, data):
         """ Create one ping """
         point = Point(0, 0)
         point.from_location(float(data['lon']), float(data['lat']))
-        x = int(point.x)
-        y = int(point.y)
-        title = self.gen_title_from_text(data['text'])
-        log_str = 'Creating ' + title + ':'
+        ping = {
+            'x': int(point.x),
+            'y': int(point.y),
+            'title': self.gen_title_from_text(data['text']),
+            'description': data['text'][:self.PING_DESCRIPTION_MAX_LEN],
+            'color': self.get_rand_color()
+        }
 
-        if title in self.existing_pings:
+        log_str = 'Creating ' + ping['title'] + ':'
+
+        if self.is_ping_exists(ping):
             # Ping is existing
             log_str += ' already in.'
         else:
-            ping = {
-                'x': x,
-                'y': y,
-                'title': title,
-                'description': data['text'],
-                'color': self.get_rand_color()
-            }
             # Populate tags they are here
             if 'tags' in data:
                 log_str += ' got tags;'
@@ -129,12 +121,18 @@ class BaseUploader(object):
                         log_str += ' image NOT assigned (no filename came from server);'
                 else:
                     log_str += ' got http error while downloading image (%s);' % image_response.status_code
-            response = self.server.action("create_ping", self.TOKEN, ping)
+            response = self.server.action('create_ping', self.TOKEN, ping)
             if response['code'] == 0:
+                self.counter_pings_created += 1
                 log_str += ' done.'
             else:
+                self.counter_errors += 1
                 log_str += ' error (%s).' % response['code']
-        print(log_str)
+
+        self.logger.info(log_str)
+
+    def sleep(self):
+        time.sleep(self.TIMEOUT)
 
 
 class BaseUploaderNoCfgFileException(Exception):
