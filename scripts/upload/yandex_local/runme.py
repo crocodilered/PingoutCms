@@ -16,6 +16,8 @@ if __name__ == '__main__':
     if config_file_path:
         uploader = Uploader(config_file_path)
         uploader.run()
+        log_str = '%s pings created, %s errors' % (uploader.counter_pings_created,uploader.counter_errors)
+        uploader.logger.info(log_str)
     else:
         print('You must provide -config=path_to_conf_file argument.')
         exit(1)
