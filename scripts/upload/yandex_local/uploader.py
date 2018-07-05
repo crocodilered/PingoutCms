@@ -1,11 +1,9 @@
 """
 Script to upload today-content to Pingout from Yandex.Locals project (YL).
 We'll load data from YL, transform then, and upload to Pingout (do not forget to check for doubles.
-
-Run me once in hour!
 """
 
-import time
+
 from scripts.upload.yandex_local.districts import DISTRICTS
 from scripts.upload.base_uploader import BaseUploader
 
@@ -48,10 +46,9 @@ class Uploader(BaseUploader):
 
     def run(self):
         """ Upload all the pings in stash """
-        self.load_existing_pings()
         self.logger.info('Start to upload pings.')
         for i in DISTRICTS:
             new_pings = self.load_new_pings(i['id'])
             for data in new_pings:
                 self.create_ping(data)
-                time.sleep(.5)
+                self.sleep()
