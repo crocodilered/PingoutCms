@@ -80,7 +80,10 @@ class BaseUploader(object):
         :return:
         """
         response = self.server.action('search', self.TOKEN, {'text': ping['title']})
-        return response and response['found'] and len(response['found'])>0 and response['found'][0]['ping_id']
+        if response and 'found' in response and len(response['found']) > 0 and 'ping_id' in response['found'][0]:
+            return True
+        else:
+            return False
 
     def create_ping(self, data):
         """ Create one ping """
